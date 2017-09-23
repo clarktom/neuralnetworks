@@ -2,9 +2,13 @@ import numpy as np
 import theano
 import theano.tensor as T
 import matplotlib.pyplot as plt
+import time
 
 def init_bias(n = 1):
-    return(theano.shared(np.zeros(n), theano.config.floatX))
+    return(np.zeros(n))
+
+def create_bias(n = 1):
+    return(theano.shared(init_bias(n), theano.config.floatX))
 
 def init_weights(n_in=1, n_out=1, logistic=True):
     W_values = np.asarray(
@@ -16,6 +20,10 @@ def init_weights(n_in=1, n_out=1, logistic=True):
         )
     if logistic == True:
         W_values *= 4
+    return W_values
+
+def create_weights(n_in=1, n_out=1, logistic=True):
+    W_values = init_weights(n_in, n_out, logistic)
     return (theano.shared(value=W_values, name='W', borrow=True))
 
 # scale data
@@ -40,7 +48,6 @@ def shuffle_data (samples, labels):
     samples, labels = samples[idx], labels[idx]
     return samples, labels
 
-
 decay = 1e-6
 learning_rate = 0.01
 epochs = 1000
@@ -49,8 +56,8 @@ epochs = 1000
 X = T.matrix() #features
 Y = T.matrix() #output
 
-w1, b1 = init_weights(36, 10), init_bias(10) #weights and biases from input to hidden layer
-w2, b2 = init_weights(10, 6, logistic=False), init_bias(6) #weights and biases from hidden to output layer
+w1, b1 = create_weights(36, 10), create_bias(10) #weights and biases from input to hidden layer
+w2, b2 = create_weights(10, 6, logistic=False), create_bias(6) #weights and biases from hidden to output layer
 
 h1 = T.nnet.sigmoid(T.dot(X, w1) + b1)
 py = T.nnet.softmax(T.dot(h1, w2) + b2)
@@ -105,14 +112,15 @@ n = len(trainX)
 result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
+result["time_update"] = []
 
-batch_size_list = [4, 8, 16, 32, 64]
+# batch_size_list = [4, 8, 16, 32, 64]
+batch_size_list = [32, 64]
 
 for batch_size in batch_size_list:
     test_accuracy = []
     train_cost = []
-    w1, b1 = init_weights(36, 10), init_bias(10) #weights and biases from input to hidden layer
-    w2, b2 = init_weights(10, 6, logistic=False), init_bias(6) #weights and biases from hidden to output layer
+    t = time.time()
     for i in range(epochs):
         trainX, trainY = shuffle_data(trainX, trainY)
         cost = 0.0
@@ -123,8 +131,17 @@ for batch_size in batch_size_list:
 
         test_accuracy.append(np.mean(np.argmax(testY, axis=1) == predict(testX)))
         # print(test_accuracy)
+
+    print("Before : ", w1.get_value()[0])
+    w1.set_value(init_weights(36, 10))
+    b1.set_value(init_bias(10)) #weights and biases from input to hidden layer
+    print("After : ", w1.get_value()[0])
+    w2.set_value(init_weights(10, 6, logistic=False))
+    b2.set_value(init_bias(6)) #weights and biases from hidden to output layer
+
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
+    result["time_update"].append(((time.time()-t))/epochs*np.arange(epochs))
 
 #print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
@@ -147,5 +164,13 @@ plt.xlabel('iterations')
 plt.ylabel('accuracy')
 plt.title('test accuracy')
 plt.savefig('p2a_sample_accuracy.png')
+
+plt.figure()
+for label, time, cost in zip(batch_size_list, result["time_update"], result["train_cost"]):
+    plt.plot(time, cost, label="batch size = " + str(label))
+plt.xlabel('time for update in s')
+plt.ylabel('cross-entropy')
+plt.title('title')
+plt.savefig('p2b_time_update.png')
 
 plt.show()

@@ -3,6 +3,7 @@ import theano
 import theano.tensor as T
 import matplotlib.pyplot as plt
 
+
 def init_bias(n = 1):
     return(theano.shared(np.zeros(n), theano.config.floatX))
 
