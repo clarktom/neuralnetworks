@@ -45,6 +45,63 @@ decay = 1e-6
 learning_rate = 0.01
 epochs = 1000
 
+# theano expressions
+X = T.matrix() #features
+Y = T.matrix() #output
+
+w1, b1 = init_weights(36, 10), init_bias(10) #weights and biases from input to hidden layer
+w2, b2 = init_weights(10, 6, logistic=False), init_bias(6) #weights and biases from hidden to output layer
+
+h1 = T.nnet.sigmoid(T.dot(X, w1) + b1)
+py = T.nnet.softmax(T.dot(h1, w2) + b2)
+
+y_x = T.argmax(py, axis=1)
+
+cost = T.mean(T.nnet.categorical_crossentropy(py, Y)) + decay*(T.sum(T.sqr(w1)+T.sum(T.sqr(w2))))
+params = [w1, b1, w2, b2]
+updates = sgd(cost, params, learning_rate)
+
+# compile
+train = theano.function(inputs=[X, Y], outputs=cost, updates=updates, allow_input_downcast=True)
+predict = theano.function(inputs=[X], outputs=y_x, allow_input_downcast=True)
+
+
+#read train data
+train_input = np.loadtxt('../../data/sat_train.txt',delimiter=' ')
+trainX, train_Y = train_input[:,:36], train_input[:,-1].astype(int)
+trainX_min, trainX_max = np.min(trainX, axis=0), np.max(trainX, axis=0)
+trainX = scaleN(trainX)
+#train X is the data matrix
+#this is the desired output
+train_Y[train_Y == 7] = 6
+trainY = np.zeros((train_Y.shape[0], 6))
+#this is the K matrix
+trainY[np.arange(train_Y.shape[0]), train_Y-1] = 1
+
+
+#read test data
+test_input = np.loadtxt('../../data/sat_test.txt',delimiter=' ')
+testX, test_Y = test_input[:,:36], test_input[:,-1].astype(int)
+
+testX_min, testX_max = np.min(testX, axis=0), np.max(testX, axis=0)
+testX = scaleN(testX)
+
+test_Y[test_Y == 7] = 6
+testY = np.zeros((test_Y.shape[0], 6))
+testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
+
+print(trainX.shape, trainY.shape)
+print(testX.shape, testY.shape)
+
+# first, experiment with a small sample of data
+##trainX = trainX[:1000]
+##trainY = trainY[:1000]
+##testX = testX[-250:]
+##testY = testY[-250:]
+
+# train and test
+n = len(trainX)
+
 result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
@@ -52,63 +109,6 @@ result["train_cost"] = []
 batch_size_list = [4, 8, 16, 32, 64]
 
 for batch_size in batch_size_list:
-    # theano expressions
-    X = T.matrix() #features
-    Y = T.matrix() #output
-
-    w1, b1 = init_weights(36, 10), init_bias(10) #weights and biases from input to hidden layer
-    w2, b2 = init_weights(10, 6, logistic=False), init_bias(6) #weights and biases from hidden to output layer
-
-    h1 = T.nnet.sigmoid(T.dot(X, w1) + b1)
-    py = T.nnet.softmax(T.dot(h1, w2) + b2)
-
-    y_x = T.argmax(py, axis=1)
-
-    cost = T.mean(T.nnet.categorical_crossentropy(py, Y)) + decay*(T.sum(T.sqr(w1)+T.sum(T.sqr(w2))))
-    params = [w1, b1, w2, b2]
-    updates = sgd(cost, params, learning_rate)
-
-    # compile
-    train = theano.function(inputs=[X, Y], outputs=cost, updates=updates, allow_input_downcast=True)
-    predict = theano.function(inputs=[X], outputs=y_x, allow_input_downcast=True)
-
-
-    #read train data
-    train_input = np.loadtxt('../../data/sat_train.txt',delimiter=' ')
-    trainX, train_Y = train_input[:,:36], train_input[:,-1].astype(int)
-    trainX_min, trainX_max = np.min(trainX, axis=0), np.max(trainX, axis=0)
-    trainX = scaleN(trainX)
-    #train X is the data matrix
-    #this is the desired output
-    train_Y[train_Y == 7] = 6
-    trainY = np.zeros((train_Y.shape[0], 6))
-    #this is the K matrix
-    trainY[np.arange(train_Y.shape[0]), train_Y-1] = 1
-
-
-    #read test data
-    test_input = np.loadtxt('../../data/sat_test.txt',delimiter=' ')
-    testX, test_Y = test_input[:,:36], test_input[:,-1].astype(int)
-
-    testX_min, testX_max = np.min(testX, axis=0), np.max(testX, axis=0)
-    testX = scaleN(testX)
-
-    test_Y[test_Y == 7] = 6
-    testY = np.zeros((test_Y.shape[0], 6))
-    testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
-
-    print(trainX.shape, trainY.shape)
-    print(testX.shape, testY.shape)
-
-    # first, experiment with a small sample of data
-    ##trainX = trainX[:1000]
-    ##trainY = trainY[:1000]
-    ##testX = testX[-250:]
-    ##testY = testY[-250:]
-
-    # train and test
-    n = len(trainX)
-
     test_accuracy = []
     train_cost = []
     w1, b1 = init_weights(36, 10), init_bias(10) #weights and biases from input to hidden layer
@@ -133,7 +133,7 @@ for batch_size in batch_size_list:
 plt.figure()
 for label, curve in zip(batch_size_list, result["train_cost"]):
     plt.plot(range(epochs), curve, label="batch size = " + str(label))
-plt.legend(loc = 'lower right')
+plt.legend(loc = 'upper right')
 plt.xlabel('iterations')
 plt.ylabel('cross-entropy')
 plt.title('training cost')

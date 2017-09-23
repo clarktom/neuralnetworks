@@ -132,7 +132,7 @@ for j in range(0, max_it):
     else:
         list2.append(test_accuracy)
 
-#Plots
+# Plots
 # plt.figure()
 # plt.plot(range(epochs), train_cost)
 # plt.xlabel('iterations')
