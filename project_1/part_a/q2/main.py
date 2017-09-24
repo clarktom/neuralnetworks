@@ -108,14 +108,14 @@ print(testX.shape, testY.shape)
 
 # train and test
 n = len(trainX)
-
 result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
 result["time_update"] = []
+time_for_update = np.zeros(n)
 
 # batch_size_list = [4, 8, 16, 32, 64]
-batch_size_list = [32, 64]
+batch_size_list = [4, 8, 16, 32, 64]
 
 for batch_size in batch_size_list:
     test_accuracy = []
@@ -132,17 +132,18 @@ for batch_size in batch_size_list:
         test_accuracy.append(np.mean(np.argmax(testY, axis=1) == predict(testX)))
         # print(test_accuracy)
 
-    print("Before : ", w1.get_value()[0])
+
     w1.set_value(init_weights(36, 10))
     b1.set_value(init_bias(10)) #weights and biases from input to hidden layer
-    print("After : ", w1.get_value()[0])
+
     w2.set_value(init_weights(10, 6, logistic=False))
     b2.set_value(init_bias(6)) #weights and biases from hidden to output layer
 
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
-    result["time_update"].append(((time.time()-t))/epochs*np.arange(epochs))
+    result["time_update"].append((np.arange(epochs)*(time.time()-t))/epochs)
 
+    time_for_update[batch_size] = (1000*(time.time()-t)) / (epochs * (n // batch_size)) 
 #print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
 #result = np.mean(result, axis=0)
@@ -172,5 +173,15 @@ plt.xlabel('time for update in s')
 plt.ylabel('cross-entropy')
 plt.title('title')
 plt.savefig('p2b_time_update.png')
+
+plt.figure()
+#for label, time in zip(batch_size_list, result["time_update"]):
+    #plt.plot(label, time, label="batch size = " + str(label))
+plt.plot(batch_size_list, time_for_update[batch_size_list])
+plt.xlabel('batch-size')
+plt.ylabel('time')
+plt.title('title')
+plt.xticks(batch_size_list)
+plt.savefig('p2b3_time_update.png')
 
 plt.show()
