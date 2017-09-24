@@ -48,7 +48,7 @@ def shuffle_data (samples, labels):
     samples, labels = samples[idx], labels[idx]
     return samples, labels
 
-decay = 1e-6
+decay = 0
 learning_rate = 0.01
 epochs = 1000
 batch_size = 8
@@ -113,11 +113,12 @@ n = len(trainX)
 result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
-result["time_update"] = []
-#TODO - find optimal hidden neruons
-hidden_neruon_list = [5,10]
 
-for hidden_neruon in hidden_neruon_list:
+
+
+#decay_list = [0, 1e-3,1e-6,1e-9,1e-12]
+decay_list = [1e-3, 1e-6]
+for decay in decay_list:
     test_accuracy = []
     train_cost = []
     t = time.time()
@@ -133,23 +134,23 @@ for hidden_neruon in hidden_neruon_list:
         # print(test_accuracy)
 
 
-    w1.set_value(init_weights(36, hidden_neruon))
-    b1.set_value(init_bias(hidden_neruon)) #weights and biases from input to hidden layer
+    w1.set_value(init_weights(36, 10))
+    b1.set_value(init_bias(10)) #weights and biases from input to hidden layer
 
-    w2.set_value(init_weights(hidden_neruon, 6, logistic=False))
+    w2.set_value(init_weights(10, 6, logistic=False))
     b2.set_value(init_bias(6)) #weights and biases from hidden to output layer
 
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
-    result["time_update"].append(((time.time()-t))/epochs*np.arange(epochs))
+
 
 #print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
 #result = np.mean(result, axis=0)
 #Plots
 plt.figure()
-for label, curve in zip(hidden_neruon_list, result["train_cost"]):
-    plt.plot(range(epochs), curve, label="hidden neurons size = " + str(label))
+for label, curve in zip(decay_list, result["train_cost"]):
+    plt.plot(range(epochs), curve, label="decay size = " + str(label))
 plt.legend(loc = 'upper right')
 plt.xlabel('iterations')
 plt.ylabel('cross-entropy')
@@ -157,20 +158,13 @@ plt.title('training cost')
 plt.savefig('p2a_sample_cost.png')
 
 plt.figure()
-for label, curve in zip(hidden_neruon_list, result["test_accuracy"]):
-    plt.plot(range(epochs), curve, label="hidden neurons size = " + str(label))
+for label, curve in zip(decay_list, result["test_accuracy"]):
+    plt.plot(range(epochs), curve, label="decay size = " + str(label))
 plt.legend(loc = 'lower right')
 plt.xlabel('iterations')
 plt.ylabel('accuracy')
 plt.title('test accuracy')
 plt.savefig('p2a_sample_accuracy.png')
 
-plt.figure()
-for label, time, cost in zip(hidden_neruon_list, result["time_update"], result["train_cost"]):
-    plt.plot(time, cost, label="hidden neurons size = " + str(label))
-plt.xlabel('time for update in s')
-plt.ylabel('cross-entropy')
-plt.title('title')
-plt.savefig('p2b_time_update.png')
 
 plt.show()
