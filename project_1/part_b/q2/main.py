@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 np.random.seed(10)
 
-epochs = 1000
+epochs = 10000
 batch_size = 32
 no_hidden1 = 30 #num of neurons in hidden layer 1
 learning_rate = 0.0001
@@ -97,11 +97,6 @@ test = theano.function(
     )
 
 
-train_cost = np.zeros(epochs)
-test_cost = np.zeros(epochs)
-test_accuracy = np.zeros(epochs)
-
-
 min_error = 1e+15
 best_iter = 0
 best_w_o = np.zeros(no_hidden1)
@@ -109,51 +104,100 @@ best_w_h1 = np.zeros([no_features, no_hidden1])
 best_b_o = 0
 best_b_h1 = np.zeros(no_hidden1)
 
-alpha.set_value(learning_rate)
-print(alpha.get_value())
+result = dict()
+result["test_accuracy"] = []
+result["train_cost"] = []
+result["time_update"] = []
 
-t = time.time()
-for iter in range(epochs):
-    if iter % 100 == 0:
-        print(iter)
+learning_rates = [0.001, 0.005, 0.0001, 0.0005, 0.00001]
+
+for learning_rate in learning_rates:
+
+    alpha.set_value(learning_rate)
+    print(alpha.get_value())
+
+    train_cost = np.zeros(epochs)
+    test_cost = np.zeros(epochs)
+    test_accuracy = np.zeros(epochs)
+
+    w_o.set_value(np.random.randn(no_hidden1)*.01) 
+    b_o.set_value(np.random.randn()*.01)
+    w_h1.set_value(np.random.randn(no_features, no_hidden1)*.01)
+    b_h1.set_value(np.random.randn(no_hidden1)*0.01)
+
+    t = time.time()
+    for iter in range(epochs):
+        if iter % 100 == 0:
+            print("Number of iterations done : ", iter)
+
+        trainX, trainY = shuffle_data(trainX, trainY)
+        train_cost[iter] = train(trainX, np.transpose(trainY))
+        pred, test_cost[iter], test_accuracy[iter] = test(testX, np.transpose(testY))
+
+        if test_cost[iter] < min_error:
+            best_iter = iter
+            min_error = test_cost[iter]
+            best_w_o = w_o.get_value()
+            best_w_h1 = w_h1.get_value()
+            best_b_o = b_o.get_value()
+            best_b_h1 = b_h1.get_value()
+            best_learning_rate = learning_rate
     
-    trainX, trainY = shuffle_data(trainX, trainY)
-    train_cost[iter] = train(trainX, np.transpose(trainY))
-    pred, test_cost[iter], test_accuracy[iter] = test(testX, np.transpose(testY))
-
-    if test_cost[iter] < min_error:
-        best_iter = iter
-        min_error = test_cost[iter]
-        best_w_o = w_o.get_value()
-        best_w_h1 = w_h1.get_value()
-        best_b_o = b_o.get_value()
-        best_b_h1 = b_h1.get_value()
+    result["test_accuracy"].append(test_accuracy)
+    result["train_cost"].append(train_cost)
+    result["time_update"].append(((time.time()-t))/epochs*np.arange(epochs))
 
 #set weights and biases to values at which performance was best
 w_o.set_value(best_w_o)
 b_o.set_value(best_b_o)
 w_h1.set_value(best_w_h1)
 b_h1.set_value(best_b_h1)
-    
+
 best_pred, best_cost, best_accuracy = test(testX, np.transpose(testY))
 
-print('Minimum error: %.1f, Best accuracy %.1f, Number of Iterations: %d'%(best_cost, best_accuracy, best_iter))
+print('Minimum error: %.1f, Best accuracy %.1f, Number of Iterations: %d, Best learning rate: %d'%(best_cost, best_accuracy, best_iter, best_learning_rate))
 
 #Plots
-plt.figure()
-plt.plot(range(epochs), train_cost, label='train error')
-plt.plot(range(epochs), test_cost, label = 'test error')
-plt.xlabel('Time (s)')
-plt.ylabel('Mean Squared Error')
-plt.title('Training and Test Errors at Alpha = %.3f'%learning_rate)
-plt.legend()
-plt.savefig('p_1b_sample_mse.png')
-plt.show()
+# plt.figure()
+# plt.plot(range(epochs), train_cost, label='train error')
+# plt.plot(range(epochs), test_cost, label='test error')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Mean Squared Error')
+# plt.title('Training and Test Errors at Alpha = %.5f'%best_learning_rate)
+# plt.legend()
+# plt.savefig('p_1b_sample_mse.png')
+
+# plt.figure()
+# plt.plot(range(epochs), test_accuracy)
+# plt.xlabel('Epochs')
+# plt.ylabel('Accuracy')
+# plt.title('Test Accuracy')
+# plt.savefig('p_1b_sample_accuracy.png')
 
 plt.figure()
-plt.plot(range(epochs), test_accuracy)
-plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.title('Test Accuracy')
-plt.savefig('p_1b_sample_accuracy.png')
+for label, curve in zip(learning_rates, result["train_cost"]):
+    plt.plot(range(epochs), curve, label="alpha = " + str(label))
+plt.legend(loc = 'upper right')
+plt.xlabel('iterations')
+plt.ylabel('Mean Squared Error')
+plt.title('training cost')
+plt.savefig('p2a_sample_cost.png')
+
+plt.figure()
+for label, curve in zip(learning_rates, result["test_accuracy"]):
+    plt.plot(range(epochs), curve, label="alpha = " + str(label))
+plt.legend(loc = 'upper right')
+plt.xlabel('iterations')
+plt.ylabel('accuracy')
+plt.title('test accuracy')
+plt.savefig('p2a_sample_accuracy.png')
+
+# plt.figure()
+# for label, time, cost in zip(learning_rates, result["time_update"], result["train_cost"]):
+#     plt.plot(time, cost, label="alpha = " + str(label))
+# plt.xlabel('time for update in s')
+# plt.ylabel('cross-entropy')
+# plt.title('title')
+# plt.savefig('p2b_time_update.png')
+
 plt.show()
