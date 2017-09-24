@@ -112,6 +112,7 @@ result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
 result["time_update"] = []
+
 time_for_update = np.zeros(n)
 
 # batch_size_list = [4, 8, 16, 32, 64]
@@ -121,12 +122,15 @@ for batch_size in batch_size_list:
     test_accuracy = []
     train_cost = []
     t = time.time()
+    result["times"] = []
     for i in range(epochs):
         trainX, trainY = shuffle_data(trainX, trainY)
         cost = 0.0
 
         for start, end in zip(range(0, n, batch_size), range(batch_size, n, batch_size)):
+            t0 = time.time()
             cost += train(trainX[start:end], trainY[start:end])
+            result["times"].append(1000*(time.time()-t0))
         train_cost.append(cost/(n // batch_size))
 
         test_accuracy.append(np.mean(np.argmax(testY, axis=1) == predict(testX)))
@@ -143,7 +147,8 @@ for batch_size in batch_size_list:
     result["train_cost"].append(train_cost)
     result["time_update"].append((np.arange(epochs)*(time.time()-t))/epochs)
 
-    time_for_update[batch_size] = (1000*(time.time()-t)) / (epochs * (n // batch_size)) 
+
+    time_for_update[batch_size] = (1000*(time.time()-t)) / (epochs * (n // batch_size))
 #print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
 #result = np.mean(result, axis=0)
@@ -174,9 +179,9 @@ plt.ylabel('cross-entropy')
 plt.title('title')
 plt.savefig('p2b_time_update.png')
 
+
+
 plt.figure()
-#for label, time in zip(batch_size_list, result["time_update"]):
-    #plt.plot(label, time, label="batch size = " + str(label))
 plt.plot(batch_size_list, time_for_update[batch_size_list])
 plt.xlabel('batch-size')
 plt.ylabel('time')
