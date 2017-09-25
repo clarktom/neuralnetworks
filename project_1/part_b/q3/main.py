@@ -145,7 +145,7 @@ for no_hidden1 in no_hidden1_list:
             best_w_h1 = w_h1.get_value()
             best_b_o = b_o.get_value()
             best_b_h1 = b_h1.get_value()
-            best_learning_rate = learning_rate
+            best_no = no_hidden1
     
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
@@ -159,7 +159,7 @@ b_h1.set_value(best_b_h1)
 
 best_pred, best_cost, best_accuracy = test(testX, np.transpose(testY))
 
-print('Minimum error: %.1f, Best accuracy %.1f, Number of Iterations: %d, Best learning rate: %d'%(best_cost, best_accuracy, best_iter, best_learning_rate))
+print('Minimum error: %.1f, Best accuracy %.1f, Number of Iterations: %d, Best number of hidden neurons: %d'%(best_cost, best_accuracy, best_iter, best_no))
 
 #Plots
 # plt.figure()
