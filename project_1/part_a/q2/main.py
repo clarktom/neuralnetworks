@@ -117,8 +117,10 @@ time_for_update = np.zeros(n)
 
 # batch_size_list = [4, 8, 16, 32, 64]
 batch_size_list = [4, 8, 16, 32, 64]
+# batch_size_list = [128, 256, 512, 1024]
 
 for batch_size in batch_size_list:
+    print(batch_size)
     test_accuracy = []
     train_cost = []
     t = time.time()

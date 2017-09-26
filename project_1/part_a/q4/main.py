@@ -51,7 +51,8 @@ def shuffle_data (samples, labels):
 decay = 0
 learning_rate = 0.01
 epochs = 1000
-batch_size = 8
+batch_size = 32
+
 # theano expressions
 X = T.matrix() #features
 Y = T.matrix() #output
@@ -116,8 +117,8 @@ result["train_cost"] = []
 
 
 
-#decay_list = [0, 1e-3,1e-6,1e-9,1e-12]
-decay_list = [1e-3, 1e-6]
+decay_list = [0, 1e-3,1e-6,1e-9,1e-12]
+# decay_list = [1e-3, 1e-6]
 for decay in decay_list:
     test_accuracy = []
     train_cost = []

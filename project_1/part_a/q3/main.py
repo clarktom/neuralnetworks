@@ -51,7 +51,7 @@ def shuffle_data (samples, labels):
 decay = 1e-6
 learning_rate = 0.01
 epochs = 1000
-batch_size = 8
+batch_size = 32
 # theano expressions
 X = T.matrix() #features
 Y = T.matrix() #output
