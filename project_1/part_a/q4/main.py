@@ -119,7 +119,7 @@ result["train_cost"] = []
 
 
 decay_list = [0, 1e-3,1e-6,1e-9,1e-12] # 1e-9 is the best
-# decay_list = [1e-3, 1e-6]
+
 for decay in decay_list:
     test_accuracy = []
     train_cost = []
