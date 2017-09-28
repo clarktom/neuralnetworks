@@ -117,6 +117,9 @@ result["train_cost"] = []
 hidden_neruon_list = [5,10,15,20,25]
 
 for hidden_neruon in hidden_neruon_list:
+
+    print(hidden_neruon)
+    
     test_accuracy = []
     train_cost = []
     t = time.time()
