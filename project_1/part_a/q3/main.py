@@ -113,8 +113,7 @@ time_for_update = np.zeros(n)
 result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
-result["time_update"] = []
-#TODO - find optimal hidden neruons
+
 hidden_neruon_list = [5,10,15,20,25]
 
 for hidden_neruon in hidden_neruon_list:
@@ -141,7 +140,7 @@ for hidden_neruon in hidden_neruon_list:
 
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
-    result["time_update"].append(((time.time()-t))/epochs*np.arange(epochs))
+
     time_for_update[hidden_neruon] = (1000*(time.time()-t)) / (epochs * (n // batch_size))
 #print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
@@ -166,18 +165,10 @@ plt.title('test accuracy')
 plt.savefig('p2a_sample_accuracy.png')
 
 plt.figure()
-for label, time, cost in zip(hidden_neruon_list, result["time_update"], result["train_cost"]):
-    plt.plot(time, cost, label="hidden neurons size = " + str(label))
-plt.xlabel('time for update in s')
-plt.ylabel('cross-entropy')
-plt.title('title')
-plt.savefig('p2b_time_update.png')
-
-plt.figure()
 plt.plot(hidden_neruon_list, time_for_update[hidden_neruon_list])
 plt.xlabel('hidden neuron size')
 plt.ylabel('time for update in ms')
-plt.title('time for a weight update')
+plt.title('time to update parameters')
 plt.xticks(hidden_neruon_list)
 plt.savefig('figure_t4q2_4.png')
 plt.show()
