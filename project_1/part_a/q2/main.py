@@ -111,7 +111,7 @@ n = len(trainX)
 result = dict()
 result["test_accuracy"] = []
 result["train_cost"] = []
-result["time_update"] = []
+
 
 time_for_update = np.zeros(n)
 
@@ -147,7 +147,7 @@ for batch_size in batch_size_list:
 
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
-    result["time_update"].append((np.arange(epochs)*(time.time()-t))/epochs)
+
 
 
     time_for_update[batch_size] = (1000*(time.time()-t)) / (epochs * (n // batch_size))
@@ -173,21 +173,12 @@ plt.ylabel('accuracy')
 plt.title('test accuracy')
 plt.savefig('p2a_sample_accuracy.png')
 
-plt.figure()
-for label, time, cost in zip(batch_size_list, result["time_update"], result["train_cost"]):
-    plt.plot(time, cost, label="batch size = " + str(label))
-plt.xlabel('time for update in s')
-plt.ylabel('cross-entropy')
-plt.title('title')
-plt.savefig('p2b_time_update.png')
-
-
 
 plt.figure()
 plt.plot(batch_size_list, time_for_update[batch_size_list])
 plt.xlabel('batch-size')
-plt.ylabel('time')
-plt.title('title')
+plt.ylabel('time in ms')
+plt.title('time to update parameters')
 plt.xticks(batch_size_list)
 plt.savefig('p2b3_time_update.png')
 
