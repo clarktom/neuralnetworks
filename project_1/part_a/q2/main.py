@@ -133,6 +133,7 @@ for batch_size in batch_size_list:
             t0 = time.time()
             cost += train(trainX[start:end], trainY[start:end])
             result["times"].append(1000*(time.time()-t0))
+            
         train_cost.append(cost/(n // batch_size))
 
         test_accuracy.append(np.mean(np.argmax(testY, axis=1) == predict(testX)))

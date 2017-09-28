@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 np.random.seed(10)
 
-epochs = 10000
+epochs = 1000
 batch_size = 32
 no_hidden1 = 30 #num of neurons in hidden layer 1
 learning_rate = 0.0001
