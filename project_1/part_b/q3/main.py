@@ -112,7 +112,7 @@ result["time_update"] = []
 # learning_rates = [0.001, 0.005, 0.0001, 0.0005, 0.00001]
 no_hidden1_list = [20, 30, 40, 50, 60]
 
-learning_rate = 0.001
+learning_rate = 0.005
 alpha.set_value(learning_rate)
 print(alpha.get_value())
 

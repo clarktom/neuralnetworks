@@ -52,13 +52,14 @@ decay = 0
 learning_rate = 0.01
 epochs = 1000
 batch_size = 32
+no_hidden = 25
 
 # theano expressions
 X = T.matrix() #features
 Y = T.matrix() #output
 
-w1, b1 = create_weights(36, 10), create_bias(10) #weights and biases from input to hidden layer
-w2, b2 = create_weights(10, 6, logistic=False), create_bias(6) #weights and biases from hidden to output layer
+w1, b1 = create_weights(36, no_hidden), create_bias(no_hidden) #weights and biases from input to hidden layer
+w2, b2 = create_weights(no_hidden, 6, logistic=False), create_bias(6) #weights and biases from hidden to output layer
 
 h1 = T.nnet.sigmoid(T.dot(X, w1) + b1)
 py = T.nnet.softmax(T.dot(h1, w2) + b2)
@@ -117,7 +118,7 @@ result["train_cost"] = []
 
 
 
-decay_list = [0, 1e-3,1e-6,1e-9,1e-12]
+decay_list = [0, 1e-3,1e-6,1e-9,1e-12] # 1e-9 is the best
 # decay_list = [1e-3, 1e-6]
 for decay in decay_list:
     test_accuracy = []
@@ -135,10 +136,10 @@ for decay in decay_list:
         # print(test_accuracy)
 
 
-    w1.set_value(init_weights(36, 10))
-    b1.set_value(init_bias(10)) #weights and biases from input to hidden layer
+    w1.set_value(init_weights(36, no_hidden))
+    b1.set_value(init_bias(no_hidden)) #weights and biases from input to hidden layer
 
-    w2.set_value(init_weights(10, 6, logistic=False))
+    w2.set_value(init_weights(no_hidden, 6, logistic=False))
     b2.set_value(init_bias(6)) #weights and biases from hidden to output layer
 
     result["test_accuracy"].append(test_accuracy)
