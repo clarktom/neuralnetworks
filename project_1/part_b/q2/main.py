@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
+
 np.random.seed(10)
 
 epochs = 1000
@@ -68,7 +69,6 @@ b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
 
 # learning rate
 alpha = theano.shared(learning_rate, floatX) 
-
 
 #Define mathematical expression:
 h1_out = T.nnet.sigmoid(T.dot(x, w_h1) + b_h1)
@@ -178,7 +178,7 @@ plt.figure()
 for label, curve in zip(learning_rates, result["train_cost"]):
     plt.plot(range(epochs), curve, label="alpha = " + str(label))
 plt.legend(loc = 'upper right')
-plt.xlabel('iterations')
+plt.xlabel('epochs')
 plt.ylabel('Mean Squared Error')
 plt.title('training cost')
 plt.savefig('p2a_sample_cost.png')
@@ -187,7 +187,7 @@ plt.figure()
 for label, curve in zip(learning_rates, result["test_accuracy"]):
     plt.plot(range(epochs), curve, label="alpha = " + str(label))
 plt.legend(loc = 'upper right')
-plt.xlabel('iterations')
+plt.xlabel('epochs')
 plt.ylabel('accuracy')
 plt.title('test accuracy')
 plt.savefig('p2a_sample_accuracy.png')
