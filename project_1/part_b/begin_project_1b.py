@@ -31,7 +31,7 @@ def shuffle_data (samples, labels):
     return samples, labels
 
 #read and divide data into test and train sets 
-cal_housing = np.loadtxt('cal_housing.data', delimiter=',')
+cal_housing = np.loadtxt('../data/cal_housing.data', delimiter=',')
 X_data, Y_data = cal_housing[:,:8], cal_housing[:,-1]
 Y_data = (np.asmatrix(Y_data)).transpose()
 
@@ -117,6 +117,8 @@ for iter in range(epochs):
     if iter % 100 == 0:
         print(iter)
     
+    print("trainX shape: ", trainX.shape)
+    print("trainY shape: ", trainY.shape)
     trainX, trainY = shuffle_data(trainX, trainY)
     train_cost[iter] = train(trainX, np.transpose(trainY))
     pred, test_cost[iter], test_accuracy[iter] = test(testX, np.transpose(testY))
