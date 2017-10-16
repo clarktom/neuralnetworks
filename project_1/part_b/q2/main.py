@@ -12,11 +12,11 @@ from sklearn.model_selection import KFold
 
 np.random.seed(10)
 
-epochs = 100
+epochs = 1000
 batch_size = 256
 no_hidden1 = 30 #num of neurons in hidden layer 1
 learning_rate = 0.0001
-noExps = 2
+noExps = 10
 
 floatX = theano.config.floatX
 
