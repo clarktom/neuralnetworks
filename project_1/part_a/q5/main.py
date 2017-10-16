@@ -88,16 +88,6 @@ test_Y[test_Y == 7] = 6
 testY = np.zeros((test_Y.shape[0], 6))
 testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
 
-print(trainX.shape, trainY.shape)
-print(testX.shape, testY.shape)
-
-# first, experiment with a small sample of data
-##trainX = trainX[:1000]
-##trainY = trainY[:1000]
-##testX = testX[-250:]
-##testY = testY[-250:]
-
-
 # train and test
 n = len(trainX)
 test_accuracy = []

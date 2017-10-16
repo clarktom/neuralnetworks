@@ -100,11 +100,6 @@ testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
 print(trainX.shape, trainY.shape)
 print(testX.shape, testY.shape)
 
-# first, experiment with a small sample of data
-##trainX = trainX[:1000]
-##trainY = trainY[:1000]
-##testX = testX[-250:]
-##testY = testY[-250:]
 
 # train and test
 n = len(trainX)
@@ -115,9 +110,8 @@ result["train_cost"] = []
 
 time_for_update = np.zeros(n)
 
-# batch_size_list = [4, 8, 16, 32, 64]
 batch_size_list = [4, 8, 16, 32, 64]
-# batch_size_list = [128, 256, 512, 1024]
+
 
 for batch_size in batch_size_list:
     print(batch_size)
@@ -133,7 +127,7 @@ for batch_size in batch_size_list:
             t0 = time.time()
             cost += train(trainX[start:end], trainY[start:end])
             result["times"].append(1000*(time.time()-t0))
-            
+
         train_cost.append(cost/(n // batch_size))
 
         test_accuracy.append(np.mean(np.argmax(testY, axis=1) == predict(testX)))
@@ -152,9 +146,7 @@ for batch_size in batch_size_list:
 
 
     time_for_update[batch_size] = (1000*(time.time()-t)) / (epochs * (n // batch_size))
-#print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
-#result = np.mean(result, axis=0)
 #Plots
 plt.figure()
 for label, curve in zip(batch_size_list, result["train_cost"]):

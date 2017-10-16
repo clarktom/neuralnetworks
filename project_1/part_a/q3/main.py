@@ -101,12 +101,6 @@ testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
 print(trainX.shape, trainY.shape)
 print(testX.shape, testY.shape)
 
-# first, experiment with a small sample of data
-##trainX = trainX[:1000]
-##trainY = trainY[:1000]
-##testX = testX[-250:]
-##testY = testY[-250:]
-
 # train and test
 n = len(trainX)
 time_for_update = np.zeros(n)
@@ -119,7 +113,7 @@ hidden_neruon_list = [5,10,15,20,25]
 for hidden_neruon in hidden_neruon_list:
 
     print(hidden_neruon)
-    
+
     test_accuracy = []
     train_cost = []
     t = time.time()
@@ -132,8 +126,6 @@ for hidden_neruon in hidden_neruon_list:
         train_cost.append(cost/(n // batch_size))
 
         test_accuracy.append(np.mean(np.argmax(testY, axis=1) == predict(testX)))
-        # print(test_accuracy)
-
 
     w1.set_value(init_weights(36, hidden_neruon))
     b1.set_value(init_bias(hidden_neruon)) #weights and biases from input to hidden layer
@@ -145,9 +137,7 @@ for hidden_neruon in hidden_neruon_list:
     result["train_cost"].append(train_cost)
 
     time_for_update[hidden_neruon] = (1000*(time.time()-t)) / (epochs * (n // batch_size))
-#print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
 
-#result = np.mean(result, axis=0)
 #Plots
 plt.figure()
 for label, curve in zip(hidden_neruon_list, result["train_cost"]):

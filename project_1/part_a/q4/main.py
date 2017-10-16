@@ -103,12 +103,6 @@ testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
 print(trainX.shape, trainY.shape)
 print(testX.shape, testY.shape)
 
-# first, experiment with a small sample of data
-##trainX = trainX[:1000]
-##trainY = trainY[:1000]
-##testX = testX[-250:]
-##testY = testY[-250:]
-
 # train and test
 n = len(trainX)
 
@@ -145,10 +139,6 @@ for decay in decay_list:
     result["test_accuracy"].append(test_accuracy)
     result["train_cost"].append(train_cost)
 
-
-#print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
-
-#result = np.mean(result, axis=0)
 #Plots
 plt.figure()
 for label, curve in zip(decay_list, result["train_cost"]):
