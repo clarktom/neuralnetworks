@@ -102,44 +102,26 @@ for j in range(0, max_it):
     testY = np.zeros((test_Y.shape[0], 6))
     testY[np.arange(test_Y.shape[0]), test_Y-1] = 1
 
-    # print(trainX.shape, trainY.shape)
-    # print(testX.shape, testY.shape)
-
-    # first, experiment with a small sample of data
-    ##trainX = trainX[:1000]
-    ##trainY = trainY[:1000]
-    ##testX = testX[-250:]
-    ##testY = testY[-250:]
 
     # train and test
     n = len(trainX)
     test_accuracy = []
     train_cost = []
     for i in range(epochs):
-        # if i % 1000 == 0:
-        #     print(i)
-        
+
         trainX, trainY = shuffle_data(trainX, trainY)
         cost = 0.0
         for start, end in zip(range(0, n, batch_size), range(batch_size, n, batch_size)):
             cost += train(trainX[start:end], trainY[start:end])
         train_cost = np.append(train_cost, cost/(n // batch_size))
-        
+
         test_accuracy = np.append(test_accuracy, np.mean(np.argmax(testY, axis=1) == predict(testX)))
 
-    # print('%.1f accuracy at %d iterations'%(np.max(test_accuracy)*100, np.argmax(test_accuracy)+1))
     if j < max_it/2:
         list1.append(test_accuracy)
     else:
         list2.append(test_accuracy)
 
-# Plots
-# plt.figure()
-# plt.plot(range(epochs), train_cost)
-# plt.xlabel('iterations')
-# plt.ylabel('cross-entropy')
-# plt.title('training cost')
-# plt.savefig('p1a_sample_cost.png')
 
 print("Computing means...")
 list1 = np.mean(list1, axis=0)
