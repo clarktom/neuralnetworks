@@ -12,7 +12,7 @@ np.random.seed(10)
 
 epochs = 1000
 batch_size = 256
-no_hidden1 = 60 #num of neurons in hidden layer 1
+no_hidden1 = 60
 learning_rate = 0.0001
 
 floatX = theano.config.floatX
@@ -151,17 +151,6 @@ pprint.pprint(fold_train_cost)
 fold_test_accuracy = np.mean(fold_test_accuracy, axis=0)
 print("fold_train_cost")
 pprint.pprint(fold_test_accuracy)
-
-#Plots
-# plt.figure()
-# plt.plot(range(epochs), train_cost, label='train error')
-# plt.plot(range(epochs), test_cost, label = 'test error')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Mean Squared Error')
-# plt.title('Training and Test Errors at Alpha for 3 layers = %.3f'%learning_rate)
-# plt.legend()
-# plt.savefig('p_1b_sample_mse.png')
-# plt.show()
 
 plt.figure()
 plt.plot(range(epochs), fold_test_accuracy)

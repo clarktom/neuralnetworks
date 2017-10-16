@@ -160,17 +160,6 @@ fold_test_accuracy = np.mean(fold_test_accuracy, axis=0)
 print("fold_train_cost")
 pprint.pprint(fold_test_accuracy)
 
-# #Plots
-# plt.figure()
-# plt.plot(range(epochs), train_cost, label='train error')
-# plt.plot(range(epochs), test_cost, label = 'test error')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Mean Squared Error')
-# plt.title('Training and Test Errors at Alpha for 4 layers = %.3f'%learning_rate)
-# plt.legend()
-# plt.savefig('p_1b_sample_mse.png')
-# plt.show()
-
 plt.figure()
 plt.plot(range(epochs), fold_test_accuracy)
 plt.xlabel('Epochs')

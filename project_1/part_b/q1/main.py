@@ -14,7 +14,7 @@ np.random.seed(10)
 
 epochs = 1000
 batch_size = 256
-no_hidden1 = 30 #num of neurons in hidden layer 1
+no_hidden1 = 30
 learning_rate = 0.0001
 noFolds = 5
 
@@ -107,20 +107,6 @@ test = theano.function(
     allow_input_downcast=True
     )
 
-# m = 3*X_data.shape[0] // 10
-# testX, testY = X_data[:m],Y_data[:m]
-# trainX, trainY = X_data[m:], Y_data[m:]
-
-# trainX = scale(trainX)
-# testX = scale(testX)
-
-# trainX = normalize(trainX)
-# testX = normalize(testX)
-
-# train_cost = np.zeros(epochs)
-# test_cost = np.zeros(epochs)
-# test_accuracy = np.zeros(epochs)
-
 w_o = theano.shared(np.random.randn(no_hidden1)*.01, floatX ) 
 b_o = theano.shared(np.random.randn()*.01, floatX)
 w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
@@ -129,17 +115,6 @@ b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
 best_learning_rate = 0.0001
 alpha.set_value(best_learning_rate)
 print(alpha.get_value())
-
-# n = trainX.shape[0]
-# for iter in range(epochs):
-
-#     trainX, trainY = shuffle_data(trainX, trainY)
-#     # train_cost[iter] = train(trainX, trainY)
-#     cost = 0
-#     for start_batch, end_batch in zip(range(0, n, batch_size), range(batch_size, n, batch_size)):
-#         cost += train(trainX[start_batch:end_batch], np.transpose(trainY[start_batch:end_batch]))
-#     train_cost[iter] = (cost/(n // batch_size))
-#     pred, test_cost[iter], test_accuracy[iter] = test(testX, np.transpose(testY))
 
 fold_test_cost_min = []
 fold_test_cost = []
@@ -151,9 +126,6 @@ for fold in range(noFolds):
     start, end = fold*fold_size, (fold +1)*fold_size
     testX, testY = X_data[start:end], Y_data[start:end]
     trainX, trainY = np.append(X_data[:start], X_data[end:], axis=0), np.append(Y_data[:start], Y_data[end:], axis=0)
-
-    # trainX = scale(trainX)
-    # testX = scale(testX)
 
     trainX = normalize(trainX)
     testX = normalize(testX)
@@ -205,7 +177,6 @@ pprint.pprint(fold_test_accuracy)
 #Plots
 plt.figure()
 plt.plot(range(epochs), fold_train_cost, label='train error')
-# plt.plot(range(epochs), fold_test_cost, label = 'test error')
 plt.xlabel('Epochs')
 plt.ylabel('Mean Squared Error')
 plt.title('Training Errors at Alpha = %.4f'%learning_rate)
