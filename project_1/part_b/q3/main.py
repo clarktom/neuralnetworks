@@ -14,8 +14,8 @@ np.random.seed(10)
 
 epochs = 1000
 batch_size = 256
-no_hidden1 = 20 #num of neurons in hidden layer 1
-learning_rate = 0.00001
+no_hidden1 = 20
+learning_rate = 0.00001 # Optimal learning rate
 noExps = 10
 
 floatX = theano.config.floatX
@@ -34,7 +34,6 @@ def normalize(X):
 def shuffle_data (samples, labels):
     idx = np.arange(samples.shape[0])
     np.random.shuffle(idx)
-    #print  (samples.shape, labels.shape)
     samples, labels = samples[idx], labels[idx]
     return samples, labels
 
@@ -105,167 +104,136 @@ test = theano.function(
     allow_input_downcast=True
     )
 
-# train_cost = np.zeros(epochs)
-# test_cost = np.zeros(epochs)
-# test_accuracy = np.zeros(epochs)
+min_error = 1e+15
 
-# min_error = 1e+15
-# # best_iter = 0
-# # best_w_o = np.zeros(no_hidden1)
-# # best_w_h1 = np.zeros([no_features, no_hidden1])
-# # best_b_o = 0
-# # best_b_h1 = np.zeros(no_hidden1)
+alpha.set_value(learning_rate)
+print(alpha.get_value())
 
-# learning_rate = 0.00001
-# alpha.set_value(learning_rate)
-# print(alpha.get_value())
-
-# no_hiddens = [20, 30, 40, 50, 60]
-
-# noFolds = 5
-# print("X shape: ", X_data.shape)
-# print("Y shape: ", Y_data.shape)
-# fold_size = X_data.shape[0] // noFolds
-# print("Fold size: ", fold_size)
-# print("nb of features: ", no_features)
-
-# print("---------------------")
-
-# opt_hidden = []
-# exp_test_cost_min = []
-# exp_test_cost = []
-# exp_train_cost = []
-# for exp in range(noExps):
-#     start_time = time.time()
-#     print(datetime.datetime.now().time(), '- Exp: ', exp+1)
-#     # np.random.shuffle(idx)
-#     # X, Y = X[idx], Y[idx]
-#     X_data, Y_data = shuffle_data(X_data, Y_data)
-    
-#     param_test_cost_min = []
-#     param_test_cost = []
-#     param_train_cost = []
-#     for no_hidden1 in no_hiddens:
-#         print("    Number of neurons: ", no_hidden1)
-
-#         fold_test_cost_min = []
-#         fold_test_cost = []
-#         fold_train_cost = []
-#         for fold in range(noFolds):
-#             print("        Folder number: ", fold+1)
-
-#             start, end = fold*fold_size, (fold +1)*fold_size
-#             testX, testY = X_data[start:end], Y_data[start:end]
-#             trainX, trainY = np.append(X_data[:start], X_data[end:], axis=0), np.append(Y_data[:start], Y_data[end:], axis=0)
-
-#             # trainX = scale(trainX)
-#             # testX = scale(testX)
-
-#             trainX = normalize(trainX)
-#             testX = normalize(testX)
-
-#             print("            testX shape: ", testX.shape)
-#             print("            testY shape: ", testY.shape)
-
-#             w_o.set_value(np.random.randn(no_hidden1)*.01)
-#             b_o.set_value(np.random.randn()*.01)
-#             w_h1.set_value(np.random.randn(no_features, no_hidden1)*.01)
-#             b_h1.set_value(np.random.randn(no_hidden1)*0.01)
-
-#             min_cost = 1e+15
-#             min_accuracy = 1e+15
-#             epochs_test_cost_min = []
-#             epochs_test_cost = []
-#             epochs_train_cost = []
-#             for epoch in range(epochs):
-#                 n = trainX.shape[0]
-#                 train_cost = 0
-#                 for start_batch, end_batch in zip(range(0, n, batch_size), range(batch_size, n, batch_size)):
-#                     train_cost += train(trainX[start_batch:end_batch], np.transpose(trainY[start_batch:end_batch]))
-#                 pred, test_cost, test_accuracy = test(testX, np.transpose(testY))
-#                 epochs_test_cost.append(test_cost)
-#                 epochs_train_cost.append(train_cost/(n // batch_size))
-
-#                 if test_cost < min_cost:
-#                     min_cost = test_cost
-#                 if test_accuracy < min_accuracy:
-#                     min_accuracy = test_accuracy
-
-#             fold_test_cost_min.append(min_cost)
-#             fold_test_cost.append(epochs_test_cost)
-#             fold_train_cost.append(epochs_train_cost)
-
-#         param_test_cost_min.append(np.mean(fold_test_cost_min))
-#         param_test_cost.append(np.mean(fold_test_cost, axis=0))
-#         param_train_cost.append(np.mean(fold_train_cost, axis=0))
-
-#     exp_test_cost.append(param_test_cost)
-#     exp_train_cost.append(param_train_cost)
-
-#     opt_hidden = np.append(opt_hidden, np.argmin(param_test_cost_min))
-#     elapsed_time = time.time() - start_time
-#     print("    Elapsed time:", elapsed_time)
-
-# print("opt_hidden: ", opt_hidden)
-
-# exp_test_cost = np.mean(exp_test_cost, axis=0)
-# print("exp_test_cost")
-# pprint.pprint(exp_test_cost)
-# exp_train_cost = np.mean(exp_train_cost, axis=0)
-# print("exp_train_cost")
-# pprint.pprint(exp_train_cost)
-
-# # print("counts: ", counts)
-
-# plt.figure()
-# counts = []
-# for n in range(len(no_hiddens)):
-#     counts = np.append(counts, np.sum(opt_hidden == n))
-# print("counts: ", counts)
-# plt.bar(np.arange(1, len(no_hiddens)+1), counts)
-# plt.xticks(np.arange(1, len(no_hiddens)+1), no_hiddens)
-# plt.xlabel('number of hidden neurons')
-# plt.ylabel('number of experiments')
-# plt.title('distribution of optimal no of hidden neurons')
-# plt.savefig('figure_t6.q1b_2.png')
-# plt.show()
-
-# # print(exp_test_cost.shape)
-# # print(exp_train_cost.shape)
-
-# #Plots
-# plt.figure()
-# for idx, no_hidden1 in enumerate(no_hiddens):
-#     print("exp_train_cost", idx)
-#     # pprint.pprint(exp_train_cost[idx])
-#     # print("exp_test_cost", idx)
-#     # pprint.pprint(exp_test_cost[idx])
-#     plt.plot(range(epochs), exp_train_cost[idx], label=('train error '+str(no_hidden1)))
-#     # plt.plot(range(epochs), exp_test_cost[idx], label=('validation error '+str(learning_rate)))
-# plt.xlabel('Epochs')
-# plt.ylabel('Mean Squared Error')
-# plt.title('Training Errors')
-# plt.legend()
-# plt.savefig('p_1b_sample_mse.png')
-# plt.show()
-
-# --------------------------------------------------------------------------------------------------------
+no_hiddens = [20, 30, 40, 50, 60]
 
 noFolds = 5
 print("X shape: ", X_data.shape)
 print("Y shape: ", Y_data.shape)
 fold_size = X_data.shape[0] // noFolds
+print("Fold size: ", fold_size)
+print("nb of features: ", no_features)
 
-no_hidden1 = 60
+print("---------------------")
+
+opt_hidden = []
+exp_test_cost_min = []
+exp_test_cost = []
+exp_train_cost = []
+for exp in range(noExps):
+    start_time = time.time()
+    print(datetime.datetime.now().time(), '- Exp: ', exp+1)
+    X_data, Y_data = shuffle_data(X_data, Y_data)
+    
+    param_test_cost_min = []
+    param_test_cost = []
+    param_train_cost = []
+    for no_hidden1 in no_hiddens:
+        print("    Number of neurons: ", no_hidden1)
+
+        fold_test_cost_min = []
+        fold_test_cost = []
+        fold_train_cost = []
+        for fold in range(noFolds):
+            print("        Folder number: ", fold+1)
+
+            start, end = fold*fold_size, (fold +1)*fold_size
+            testX, testY = X_data[start:end], Y_data[start:end]
+            trainX, trainY = np.append(X_data[:start], X_data[end:], axis=0), np.append(Y_data[:start], Y_data[end:], axis=0)
+
+            trainX = normalize(trainX)
+            testX = normalize(testX)
+
+            print("            testX shape: ", testX.shape)
+            print("            testY shape: ", testY.shape)
+
+            w_o.set_value(np.random.randn(no_hidden1)*.01)
+            b_o.set_value(np.random.randn()*.01)
+            w_h1.set_value(np.random.randn(no_features, no_hidden1)*.01)
+            b_h1.set_value(np.random.randn(no_hidden1)*0.01)
+
+            min_cost = 1e+15
+            min_accuracy = 1e+15
+            epochs_test_cost_min = []
+            epochs_test_cost = []
+            epochs_train_cost = []
+            for epoch in range(epochs):
+                n = trainX.shape[0]
+                train_cost = 0
+                for start_batch, end_batch in zip(range(0, n, batch_size), range(batch_size, n, batch_size)):
+                    train_cost += train(trainX[start_batch:end_batch], np.transpose(trainY[start_batch:end_batch]))
+                pred, test_cost, test_accuracy = test(testX, np.transpose(testY))
+                epochs_test_cost.append(test_cost)
+                epochs_train_cost.append(train_cost/(n // batch_size))
+
+                if test_cost < min_cost:
+                    min_cost = test_cost
+                if test_accuracy < min_accuracy:
+                    min_accuracy = test_accuracy
+
+            fold_test_cost_min.append(min_cost)
+            fold_test_cost.append(epochs_test_cost)
+            fold_train_cost.append(epochs_train_cost)
+
+        param_test_cost_min.append(np.mean(fold_test_cost_min))
+        param_test_cost.append(np.mean(fold_test_cost, axis=0))
+        param_train_cost.append(np.mean(fold_train_cost, axis=0))
+
+    exp_test_cost.append(param_test_cost)
+    exp_train_cost.append(param_train_cost)
+
+    opt_hidden = np.append(opt_hidden, np.argmin(param_test_cost_min))
+    elapsed_time = time.time() - start_time
+    print("    Elapsed time:", elapsed_time)
+
+print("opt_hidden: ", opt_hidden)
+
+exp_test_cost = np.mean(exp_test_cost, axis=0)
+print("exp_test_cost")
+pprint.pprint(exp_test_cost)
+exp_train_cost = np.mean(exp_train_cost, axis=0)
+print("exp_train_cost")
+pprint.pprint(exp_train_cost)
+
+plt.figure()
+counts = []
+for n in range(len(no_hiddens)):
+    counts = np.append(counts, np.sum(opt_hidden == n))
+print("counts: ", counts)
+plt.bar(np.arange(1, len(no_hiddens)+1), counts)
+plt.xticks(np.arange(1, len(no_hiddens)+1), no_hiddens)
+plt.xlabel('number of hidden neurons')
+plt.ylabel('number of experiments')
+plt.title('distribution of optimal no of hidden neurons')
+plt.savefig('figure_t6.q1b_2.png')
+plt.show()
+
+#Plots
+plt.figure()
+for idx, no_hidden1 in enumerate(no_hiddens):
+    plt.plot(range(epochs), exp_train_cost[idx], label=('train error '+str(no_hidden1)))
+plt.xlabel('Epochs')
+plt.ylabel('Mean Squared Error')
+plt.title('Training Errors')
+plt.legend()
+plt.savefig('p_1b_sample_mse.png')
+plt.show()
+
+# --------------------------------------------------------------------------------------------------------
+
+no_hidden1 = 60 # Optimal no of hidden
+best_learning_rate = 0.00001 # Optimal learning rate
+alpha.set_value(best_learning_rate)
+print(alpha.get_value())
 
 w_o = theano.shared(np.random.randn(no_hidden1)*.01, floatX ) 
 b_o = theano.shared(np.random.randn()*.01, floatX)
 w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
 b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
-
-best_learning_rate = 0.00001
-alpha.set_value(best_learning_rate)
-print(alpha.get_value())
 
 fold_test_cost_min = []
 fold_test_cost = []
