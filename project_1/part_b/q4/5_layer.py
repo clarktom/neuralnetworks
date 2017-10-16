@@ -1,6 +1,5 @@
-import pprint
 import time
-import datetime
+import pprint
 import numpy as np
 import theano
 import theano.tensor as T
@@ -8,15 +7,13 @@ import theano.tensor as T
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from sklearn.model_selection import KFold
 
 np.random.seed(10)
 
 epochs = 1000
 batch_size = 256
-no_hidden1 = 30 #num of neurons in hidden layer 1
+no_hidden1 = 60 #num of neurons in hidden layer 1
 learning_rate = 0.0001
-noFolds = 5
 
 floatX = theano.config.floatX
 
@@ -38,68 +35,60 @@ def shuffle_data (samples, labels):
     samples, labels = samples[idx], labels[idx]
     return samples, labels
 
-def init_bias(n = 1):
-    return(theano.shared(np.zeros(n), theano.config.floatX))
-
-def init_weights(n_in=1, n_out=1, logistic=True):
-    W_values = np.random.uniform(low=-np.sqrt(6. / (n_in + n_out)),
-                                 high=np.sqrt(6. / (n_in + n_out)),
-                                 size=(n_in, n_out))
-    if logistic == True:
-        W_values *= 4
-    return(theano.shared(W_values, theano.config.floatX))
-
-def set_bias(b, n = 1):
-    b.set_value(np.zeros(n))
-
-def set_weights(w, n_in=1, n_out=1, logistic=True):
-    W_values = np.random.uniform(low=-np.sqrt(6. / (n_in + n_out)),
-                                 high=np.sqrt(6. / (n_in + n_out)),
-                                 size=(n_in, n_out))
-    if logistic == True:
-        W_values *= 4
-    w.set_value(W_values)
-
-#read and divide data into test and train sets 
+#read and divide data into test and train sets
 cal_housing = np.loadtxt('../../data/cal_housing.data', delimiter=',')
 X_data, Y_data = cal_housing[:,:8], cal_housing[:,-1]
 Y_data = (np.asmatrix(Y_data)).transpose()
 
-fold_size = X_data.shape[0] // noFolds
+X_data, Y_data = shuffle_data(X_data, Y_data)
 
-no_features = X_data.shape[1] 
+no_features = X_data.shape[1]
 x = T.matrix('x') # data sample
 d = T.matrix('d') # desired output
 no_samples = T.scalar('no_samples')
 
-# # learning rate
-alpha = theano.shared(learning_rate, floatX)
-
 # initialize weights and biases for hidden layer(s) and output layer
-w_o = theano.shared(np.random.randn(no_hidden1)*.01, floatX ) 
-b_o = theano.shared(np.random.randn()*.01, floatX)
-w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
+w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX)
 b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
+
+w_h2 = theano.shared(np.random.randn(no_hidden1, 20)*.01, floatX)
+b_h2 = theano.shared(np.random.randn(20)*0.01, floatX)
+
+w_h3 = theano.shared(np.random.randn(20, 20)*.01, floatX)
+b_h3 = theano.shared(np.random.randn(20)*0.01, floatX)
+
+w_o = theano.shared(np.random.randn(20)*.01, floatX)
+b_o = theano.shared(np.random.randn()*.01, floatX)
+
+# learning rate
+alpha = theano.shared(learning_rate, floatX)
 
 #Define mathematical expression:
 h1_out = T.nnet.sigmoid(T.dot(x, w_h1) + b_h1)
-y = T.dot(h1_out, w_o) + b_o
+h2_out = T.nnet.sigmoid(T.dot(h1_out,w_h2) + b_h2)
+h3_out = T.nnet.sigmoid(T.dot(h2_out,w_h3) + b_h3)
+
+y = T.dot(h3_out, w_o) + b_o # 5-layer
 
 cost = T.abs_(T.mean(T.sqr(d - y)))
 accuracy = T.mean(d - y)
 
 #define gradients
-dw_o, db_o, dw_h, db_h = T.grad(cost, [w_o, b_o, w_h1, b_h1])
+dw_o, db_o, dw_h1, db_h1, dw_h2, db_h2, dw_h3, db_h3 = T.grad(cost, [w_o, b_o, w_h1, b_h1, w_h2, b_h2, w_h3, b_h3]) # 5-layer
 
 train = theano.function(
         inputs = [x, d],
         outputs = cost,
         updates = [[w_o, w_o - alpha*dw_o],
                    [b_o, b_o - alpha*db_o],
-                   [w_h1, w_h1 - alpha*dw_h],
-                   [b_h1, b_h1 - alpha*db_h]],
+                   [w_h1, w_h1 - alpha*dw_h1],
+                   [b_h1, b_h1 - alpha*db_h1],
+                   [w_h2, w_h2 - alpha*dw_h2],
+                   [b_h2, b_h2 - alpha*db_h2],
+                   [w_h3, w_h3 - alpha*dw_h3],
+                   [b_h3, b_h3 - alpha*db_h3]],
         allow_input_downcast=True
-        )
+        ) # 5-layer
 
 test = theano.function(
     inputs = [x, d],
@@ -107,39 +96,15 @@ test = theano.function(
     allow_input_downcast=True
     )
 
-# m = 3*X_data.shape[0] // 10
-# testX, testY = X_data[:m],Y_data[:m]
-# trainX, trainY = X_data[m:], Y_data[m:]
+min_error = 1e+15
 
-# trainX = scale(trainX)
-# testX = scale(testX)
+noFolds = 5
+print("X shape: ", X_data.shape)
+print("Y shape: ", Y_data.shape)
+fold_size = X_data.shape[0] // noFolds
 
-# trainX = normalize(trainX)
-# testX = normalize(testX)
-
-# train_cost = np.zeros(epochs)
-# test_cost = np.zeros(epochs)
-# test_accuracy = np.zeros(epochs)
-
-w_o = theano.shared(np.random.randn(no_hidden1)*.01, floatX ) 
-b_o = theano.shared(np.random.randn()*.01, floatX)
-w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
-b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
-
-best_learning_rate = 0.0001
-alpha.set_value(best_learning_rate)
+alpha.set_value(learning_rate)
 print(alpha.get_value())
-
-# n = trainX.shape[0]
-# for iter in range(epochs):
-
-#     trainX, trainY = shuffle_data(trainX, trainY)
-#     # train_cost[iter] = train(trainX, trainY)
-#     cost = 0
-#     for start_batch, end_batch in zip(range(0, n, batch_size), range(batch_size, n, batch_size)):
-#         cost += train(trainX[start_batch:end_batch], np.transpose(trainY[start_batch:end_batch]))
-#     train_cost[iter] = (cost/(n // batch_size))
-#     pred, test_cost[iter], test_accuracy[iter] = test(testX, np.transpose(testY))
 
 fold_test_cost_min = []
 fold_test_cost = []
@@ -152,19 +117,20 @@ for fold in range(noFolds):
     testX, testY = X_data[start:end], Y_data[start:end]
     trainX, trainY = np.append(X_data[:start], X_data[end:], axis=0), np.append(Y_data[:start], Y_data[end:], axis=0)
 
-    # trainX = scale(trainX)
-    # testX = scale(testX)
-
     trainX = normalize(trainX)
     testX = normalize(testX)
 
     print("            testX shape: ", testX.shape)
     print("            testY shape: ", testY.shape)
 
-    w_o.set_value(np.random.randn(no_hidden1)*.01)
-    b_o.set_value(np.random.randn()*.01)
     w_h1.set_value(np.random.randn(no_features, no_hidden1)*.01)
     b_h1.set_value(np.random.randn(no_hidden1)*0.01)
+    w_h2.set_value(np.random.randn(no_hidden1, 20)*.01)
+    b_h2.set_value(np.random.randn(20)*0.01)
+    w_h3.set_value(np.random.randn(20, 20)*.01)
+    b_h3.set_value(np.random.randn(20)*0.01)
+    w_o.set_value(np.random.randn(20)*.01)
+    b_o.set_value(np.random.randn()*.01)
 
     min_cost = 1e+15
     min_accuracy = 1e+15
@@ -202,21 +168,21 @@ fold_test_accuracy = np.mean(fold_test_accuracy, axis=0)
 print("fold_train_cost")
 pprint.pprint(fold_test_accuracy)
 
-#Plots
-plt.figure()
-plt.plot(range(epochs), fold_train_cost, label='train error')
-# plt.plot(range(epochs), fold_test_cost, label = 'test error')
-plt.xlabel('Epochs')
-plt.ylabel('Mean Squared Error')
-plt.title('Training Errors at Alpha = %.4f'%learning_rate)
-plt.legend()
-plt.savefig('p_1b_sample_mse.png')
-plt.show()
+# #Plots
+# plt.figure()
+# plt.plot(range(epochs), train_cost, label='train error')
+# plt.plot(range(epochs), test_cost, label = 'test error')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Mean Squared Error')
+# plt.title('Training and Test Errors at Alpha for 5 layers = %.3f'%learning_rate)
+# plt.legend()
+# plt.savefig('p_1b_sample_mse.png')
+# plt.show()
 
 plt.figure()
 plt.plot(range(epochs), fold_test_accuracy)
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
-plt.title('Test Accuracy')
+plt.title('Test Accuracy for 5 layers')
 plt.savefig('p_1b_sample_accuracy.png')
 plt.show()
