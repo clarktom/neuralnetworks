@@ -12,10 +12,10 @@ from sklearn.model_selection import KFold
 np.random.seed(10)
 
 epochs = 1000
-batch_size = 256
+batch_size = 32
 no_hidden1 = 30 #num of neurons in hidden layer 1
 learning_rate = 0.0001
-noExps = 2
+noExps = 1
 
 floatX = theano.config.floatX
 
@@ -123,7 +123,7 @@ b_o = theano.shared(np.random.randn()*.01, floatX)
 w_h1 = theano.shared(np.random.randn(no_features, no_hidden1)*.01, floatX )
 b_h1 = theano.shared(np.random.randn(no_hidden1)*0.01, floatX)
 
-best_learning_rate = 0.00001
+best_learning_rate = 0.0001
 alpha.set_value(best_learning_rate)
 print(alpha.get_value())
 
@@ -141,10 +141,10 @@ for iter in range(epochs):
 #Plots
 plt.figure()
 plt.plot(range(epochs), train_cost, label='train error')
-plt.plot(range(epochs), test_cost, label = 'test error')
+# plt.plot(range(epochs), test_cost, label = 'test error')
 plt.xlabel('Epochs')
 plt.ylabel('Mean Squared Error')
-plt.title('Training and Test Errors at Alpha = %.5f'%learning_rate)
+plt.title('Training Errors at Alpha = %.4f'%learning_rate)
 plt.legend()
 plt.savefig('p_1b_sample_mse.png')
 plt.show()
