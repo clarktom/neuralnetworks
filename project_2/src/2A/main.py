@@ -14,7 +14,7 @@ batch_size = 128
 noIters = 25
 learningrate = 0.5
 decayparameter = 1e-6
-
+print('fuck off')
 def init_weights_bias4(filter_shape, d_type):
     fan_in = np.prod(filter_shape[1:])
     fan_out = filter_shape[0] * np.prod(filter_shape[2:])
@@ -41,13 +41,14 @@ def model(X, w1, b1, w2, b2, w3, b3):
     y1 = T.nnet.relu(conv2d(X, w1) + b1.dimshuffle('x', 0, 'x', 'x'))
     pool_dim = (2, 2)
     o1 = pool.pool_2d(y1, pool_dim)
+    o2 = T.flatten(o1, outdim=2)
 
-    y2 = T.nnet.relu(conv2d(o1, w2) + b2.dimshuffle('x', 0, 'x', 'x'))
-    o3 = pool.pool_2d(y2, pool_dim)
+    y2 = T.nnet.relu(conv2d(y1, w2)) + b1.dimshuffle('x', 0, 'x', 'x'))
+    o3 = pool.pool(y2, pool_dim)
     o4 = T.flatten(o3, outdim=2)
 
     pyx = T.nnet.softmax(T.dot(o4, w3) + b3)
-    return y1, o1, y2, o3, pyx
+    return y1, y2, o1, o3, pyx
 
 def sgd(cost, params, lr=0.05, decay=0.0001):
     grads = T.grad(cost=cost, wrt=params)
@@ -73,14 +74,14 @@ teX, teY = teX[:2000], teY[:2000]
 
 X = T.tensor4('X')
 Y = T.matrix('Y')
-print('xd2')
-num_filters1 = 15
-num_filters2 = 20
-w1, b1 = init_weights_bias4((num_filters1, 1, 9, 9), X.dtype)
-w2, b2 = init_weights_bias4((num_filters2, 1, 5, 5), X.dtype)
-w3, b3 = init_weights_bias2((num_filters2*3*3, 100), X.dtype)
 
-y1, o1, y2, o2, py_x  = model(X, w1, b1, w2, b2, w3, b3)
+num_filters1 = 15
+w1, b1 = init_weights_bias4((num_filters1, 1, 9, 9), X.dtype)
+num_filters2 = 20
+w2, b2 = init_weights_bias4((num_filters1 * num_filters2, 1, 5, 5), X.dtype)
+w3, b3 = init_weights_bias2((num_filters1 * num_filters2*3*3, 10), X.dtype)
+
+y1, y2 o1, o2, py_x  = model(X, w1, b1, w2, b2, w3, b3)
 
 y_x = T.argmax(py_x, axis=1)
 
@@ -130,13 +131,27 @@ pylab.gray()
 for i in range(25):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(convolved[0,i,:].reshape(20,20))
 #pylab.title('convolved feature maps')
-pylab.savefig('figure_2a_4.png')
+pylab.savefig('FirstConvLayer.png')
 
 pylab.figure()
 pylab.gray()
 for i in range(5):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled[0,i,:].reshape(5,5))
 #pylab.title('pooled feature maps')
-pylab.savefig('figure_2a_5.png')
+pylab.savefig('FirstPoolLayer.png')
+
+pylab.figure()
+pylab.gray()
+for i in range(25):
+    pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(convolved2[0,i,:].reshape(6,6))
+#pylab.title('second convolved feature maps')
+pylab.savefig('SecondConvLayer.png')
+
+pylab.figure()
+pylab.gray()
+for i in range(5):
+    pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled2[0,i,:].reshape(3,3))
+#pylab.title('second pooled feature maps')
+pylab.savefig('SecondPoolLayer.png')
 
 pylab.show()
