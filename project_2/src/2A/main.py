@@ -12,6 +12,8 @@ from theano.tensor.signal import pool
 np.random.seed(10)
 batch_size = 128
 noIters = 25
+learningrate = 0.5
+decayparameter = 1e-6
 
 def init_weights_bias4(filter_shape, d_type):
     fan_in = np.prod(filter_shape[1:])
@@ -80,7 +82,7 @@ y_x = T.argmax(py_x, axis=1)
 cost = T.mean(T.nnet.categorical_crossentropy(py_x, Y))
 params = [w1, b1, w2, b2]
 
-updates = sgd(cost, params, lr=0.05)
+updates = sgd(cost, params, learningrate, decayparameter)
 
 train = theano.function(inputs=[X, Y], outputs=cost, updates=updates, allow_input_downcast=True)
 predict = theano.function(inputs=[X], outputs=y_x, allow_input_downcast=True)
