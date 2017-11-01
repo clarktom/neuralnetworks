@@ -37,17 +37,20 @@ def init_weights_bias2(filter_shape, d_type):
     b_values = np.zeros((filter_shape[1],), dtype=d_type)
     return theano.shared(w_values,borrow=True), theano.shared(b_values, borrow=True)
 
-def model(X, w1, b1, w2, b2, w3, b3):
+def model(X, w1, b1, w2, b2, w3, b3, w4, b4):
     y1 = T.nnet.relu(conv2d(X, w1) + b1.dimshuffle('x', 0, 'x', 'x'))
     pool_dim = (2, 2)
-    o1 = pool.pool_2d(y1, pool_dim)
+    o1 = pool.pool_2d(y1, pool_dim, mode='max')
 
     y2 = T.nnet.relu(conv2d(o1, w2) + b2.dimshuffle('x', 0, 'x', 'x'))
-    o3 = pool.pool_2d(y2, pool_dim)
-    o4 = T.flatten(o3, outdim=2)
+    o2 = pool.pool_2d(y2, pool_dim, mode='max')
+    o3 = T.flatten(o2, outdim=2)
 
-    pyx = T.nnet.softmax(T.dot(o4, w3) + b3)
-    return y1, o1, y2, o3, pyx
+    #i dont know if this is a fully connected layer??
+    y3 = T.nnet.relu(T.dot(o3, w3) + b3)
+
+    pyx = T.nnet.softmax(T.dot(y3, w4) + b4)
+    return y1, o1, y2, o2, pyx
 
 def sgd(cost, params, lr=0.05, decay=0.0001):
     grads = T.grad(cost=cost, wrt=params)
@@ -77,15 +80,16 @@ print('xd2')
 num_filters1 = 15
 num_filters2 = 20
 w1, b1 = init_weights_bias4((num_filters1, 1, 9, 9), X.dtype)
-w2, b2 = init_weights_bias4((num_filters2, 1, 5, 5), X.dtype)
+w2, b2 = init_weights_bias4((num_filters2, num_filters1, 5, 5), X.dtype)
 w3, b3 = init_weights_bias2((num_filters2*3*3, 100), X.dtype)
+w4, b4 = init_weights_bias2((100, 10), X.dtype)
 
-y1, o1, y2, o2, py_x  = model(X, w1, b1, w2, b2, w3, b3)
+y1, o1, y2, o2, py_x  = model(X, w1, b1, w2, b2, w3, b3, w4, b4)
 
 y_x = T.argmax(py_x, axis=1)
 
 cost = T.mean(T.nnet.categorical_crossentropy(py_x, Y))
-params = [w1, b1, w2, b2, w3, b3]
+params = [w1, b1, w2, b2, w3, b3, w4, b4]
 
 updates = sgd(cost, params, learningrate, decayparameter)
 
@@ -94,27 +98,38 @@ predict = theano.function(inputs=[X], outputs=y_x, allow_input_downcast=True)
 test = theano.function(inputs = [X], outputs=[y1, o1, y2, o2], allow_input_downcast=True)
 
 a = []
+trainCost = []
+
 for i in range(noIters):
     trX, trY = shuffle_data (trX, trY)
     teX, teY = shuffle_data (teX, teY)
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
         cost = train(trX[start:end], trY[start:end])
     a.append(np.mean(np.argmax(teY, axis=1) == predict(teX)))
+    trainCost.append(cost/(len(trX) // batch_size))
     print(a[i])
 
 pylab.figure()
 pylab.plot(range(noIters), a)
 pylab.xlabel('epochs')
 pylab.ylabel('test accuracy')
-pylab.savefig('figure_2a_1.png')
+pylab.title('test accuracy ')
+pylab.savefig('testAccuracy')
+
+pylab.figure()
+pylab.plot(range(noIters), trainCost)
+pylab.xlabel('epochs')
+pylab.ylabel('training cost')
+pylab.title('training cost')
+pylab.savefig('trainingCost')
 
 w = w1.get_value()
 pylab.figure()
 pylab.gray()
-for i in range(25):
+for i in range(num_filters1):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(w[i,:,:,:].reshape(9,9))
 #pylab.title('filters learned')
-pylab.savefig('figure_2a_2.png')
+pylab.savefig('filtersLearned')
 
 ind = np.random.randint(low=0, high=2000)
 convolved, pooled, convolved2, pooled2 = test(teX[ind:ind+1,:])
@@ -123,20 +138,34 @@ pylab.figure()
 pylab.gray()
 pylab.axis('off'); pylab.imshow(teX[ind,:].reshape(28,28))
 #pylab.title('input image')
-pylab.savefig('figure_2a_3.png')
+pylab.savefig('inputImage')
 
 pylab.figure()
 pylab.gray()
-for i in range(25):
+for i in range(num_filters1):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(convolved[0,i,:].reshape(20,20))
 #pylab.title('convolved feature maps')
-pylab.savefig('figure_2a_4.png')
+pylab.savefig('1stConv_layer')
 
 pylab.figure()
 pylab.gray()
 for i in range(5):
-    pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled[0,i,:].reshape(5,5))
+    pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled[0,i,:].reshape(10,10))
 #pylab.title('pooled feature maps')
-pylab.savefig('figure_2a_5.png')
+pylab.savefig('1stPool_layer')
+
+pylab.figure()
+pylab.gray()
+for i in range(num_filters2):
+    pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(convolved2[0,i,:].reshape(6,6))
+#pylab.title('convolved feature maps')
+
+pylab.savefig('2stConv_layer')
+pylab.figure()
+pylab.gray()
+for i in range(5):
+    pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled2[0,i,:].reshape(3,3))
+#pylab.title('pooled feature maps')
+pylab.savefig('2stPool_layer_SGD')
 
 pylab.show()
