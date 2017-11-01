@@ -77,7 +77,7 @@ def model(X, w1, b1, w2, b2, w3, b3, w4, b4):
     o3 = T.flatten(o2, outdim=2)
 
     #i dont know if this is a fully connected layer??
-    y3 = T.nnet.relu(T.dot(o3, w3) + b3)
+    y3 = T.nnet.sigmoid(T.dot(o3, w3) + b3)
 
     pyx = T.nnet.softmax(T.dot(y3, w4) + b4)
     return y1, o1, y2, o2, pyx
