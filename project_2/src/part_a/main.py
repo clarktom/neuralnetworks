@@ -76,10 +76,9 @@ def model(X, w1, b1, w2, b2, w3, b3, w4, b4):
     o2 = pool.pool_2d(y2, pool_dim, mode='max')
     o3 = T.flatten(o2, outdim=2)
 
-    #i dont know if this is a fully connected layer??
     y3 = T.nnet.sigmoid(T.dot(o3, w3) + b3)
-
     pyx = T.nnet.softmax(T.dot(y3, w4) + b4)
+    
     return y1, o1, y2, o2, pyx
 
 def sgd(cost, params, lr=0.05, decay=0.0001):
@@ -129,7 +128,7 @@ teX, teY = teX[:2000], teY[:2000]
 
 X = T.tensor4('X')
 Y = T.matrix('Y')
-print('xd2')
+print('xd200')
 num_filters1 = 15
 num_filters2 = 20
 w1, b1 = init_weights_bias4((num_filters1, 1, 9, 9), X.dtype)
@@ -155,9 +154,13 @@ train3 = theano.function(inputs=[X, Y], outputs=cost, updates=updates3, allow_in
 predict = theano.function(inputs=[X], outputs=y_x, allow_input_downcast=True)
 test = theano.function(inputs = [X], outputs=[y1, o1, y2, o2], allow_input_downcast=True)
 
-pylab.figure()
+
 a = []
 trainCost = []
+a2 = []
+trainCost2 = []
+a3 = []
+trainCost3 = []
 
 for i in range(noIters):
     trX, trY = shuffle_data (trX, trY)
@@ -168,8 +171,6 @@ for i in range(noIters):
     trainCost.append(cost/(len(trX) // batch_size))
     print(a[i])
 
-pylab.plot(range(noIters), a, label='test accuracy sgd')
-pylab.plot(range(noIters), trainCost, label='traning cost sgd')
 
 
 print('sgd with momentum ..')
@@ -178,18 +179,14 @@ set_weights_bias4((num_filters2, num_filters1, 5, 5), X.dtype, w2, b2)
 set_weights_bias2((num_filters2*3*3, 100), X.dtype, w3, b3)
 set_weights_bias2((100, 10), X.dtype, w4, b4)
 
-a = []
-trainCost = []
 for i in range(noIters):
     trX, trY = shuffle_data (trX, trY)
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
         cost = train2(trX[start:end], trY[start:end])
-    a.append(np.mean(np.argmax(teY, axis=1) == predict(teX)))
-    trainCost.append(cost/(len(trX) // batch_size))
+    a2.append(np.mean(np.argmax(teY, axis=1) == predict(teX)))
+    trainCost2.append(cost/(len(trX) // batch_size))
     print(a[i])
 
-pylab.plot(range(noIters), a, label='test accuracy sgd with momentum')
-pylab.plot(range(noIters), trainCost, label='traning cost sgd')
 
 print('RMSprop ..')
 set_weights_bias4((num_filters1, 1, 9, 9), X.dtype, w1, b1)
@@ -197,28 +194,31 @@ set_weights_bias4((num_filters2, num_filters1, 5, 5), X.dtype, w2, b2)
 set_weights_bias2((num_filters2*3*3, 100), X.dtype, w3, b3)
 set_weights_bias2((100, 10), X.dtype, w4, b4)
 
-a = []
-trainCost = []
 for i in range(noIters):
     trX, trY = shuffle_data (trX, trY)
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
         cost = train3(trX[start:end], trY[start:end])
-    a.append(np.mean(np.argmax(teY, axis=1) == predict(teX)))
-    trainCost.append(cost/(len(trX) // batch_size))
+    a3.append(np.mean(np.argmax(teY, axis=1) == predict(teX)))
+    trainCost3.append(cost/(len(trX) // batch_size))
     print(a[i])
 
-pylab.plot(range(noIters), a, label='test accuracy RMSProp')
-pylab.plot(range(noIters), trainCost, label='traning cost RMSprop')
+pylab.figure()
+pylab.plot(range(noIters), a, label='SGD')
+pylab.plot(range(noIters), a2, label='SGD with momentum')
+pylab.plot(range(noIters), a3, label='RMSprop')
 pylab.xlabel('epochs')
-pylab.ylabel('test accuracy and training cost')
+pylab.ylabel('test accuracy')
 pylab.legend(loc='lower right')
 pylab.title('test accuracy ')
 pylab.savefig('testAccuracy')
 
 pylab.figure()
-pylab.plot(range(noIters), trainCost)
+pylab.plot(range(noIters), trainCost, label='SGD')
+pylab.plot(range(noIters), trainCost2, label='SGD with momentum')
+pylab.plot(range(noIters), trainCost3, label='RMSprop')
 pylab.xlabel('epochs')
 pylab.ylabel('training cost')
+pylab.legend(loc='upper right')
 pylab.title('training cost')
 pylab.savefig('trainingCost')
 
