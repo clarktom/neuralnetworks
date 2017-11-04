@@ -12,9 +12,9 @@ from theano.tensor.signal import pool
 np.random.seed(10)
 batch_size = 128
 noIters = 25
-learningrate = 0.5
-decayparameter = 1e-6
-momentum = 0.5
+learningrate = 0.05
+decayparameter = 1e-4
+momentum = 0.1
 decayparameterRMS = 1e-4
 p = 0.9
 ebs = 1e-6
@@ -78,7 +78,7 @@ def model(X, w1, b1, w2, b2, w3, b3, w4, b4):
 
     y3 = T.nnet.sigmoid(T.dot(o3, w3) + b3)
     pyx = T.nnet.softmax(T.dot(y3, w4) + b4)
-    
+
     return y1, o1, y2, o2, pyx
 
 def sgd(cost, params, lr=0.05, decay=0.0001):
