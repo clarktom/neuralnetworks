@@ -204,13 +204,12 @@ pylab.savefig('firstLayerWeights')
 tilde_teX = []
 for x in teX[:100]:
     tilde_x = theano_rng.binomial(size=x.shape, n=1, p=1 - corruption_level, dtype=theano.config.floatX)*x
-    tilde_teX.append(tilde_x)
-
+    tilde_teX += [tilde_x]
+tilde_teX = np.reshape(tilde_teX, teX[:100].shape)
 
 yy1, zz1 = compute_da1(tilde_teX)
-yy2, zz2 = compute_da2(yy1)
-yy3, zz3 = compute_da3(yy2)
-
+yy2, zz2 = compute_da2(yy1) # TODO: We need to compute zz1 from zz2
+yy3, zz3 = compute_da3(yy2) # TODO: We need to compute zz2 from zz3 and zz1 form zz2
 
 pylab.figure()
 pylab.gray()
@@ -237,7 +236,6 @@ pylab.gray()
 for i in range(100):
     pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(yy3[i,:].reshape(28,28))
 pylab.savefig('reconstructed image third layer')
-
 
 pylab.show()
 
