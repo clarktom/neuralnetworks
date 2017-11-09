@@ -42,13 +42,13 @@ batch_size = 128
 W1 = init_weights(28*28, 900)
 b1 = init_bias(900)
 
-b1_prime = init_bias(900)
+b1_prime = init_bias(28*28)
 W1_prime = W1.transpose()
 #second layer
 W2 = init_weights(900, 625)
 b2 = init_bias(625)
 
-b2_prime = init_bias(625)
+b2_prime = init_bias(900)
 W2_prime = W2.transpose()
 #third layer
 W3 = init_weights(625, 400)
@@ -68,11 +68,15 @@ y1 = T.nnet.sigmoid(T.dot(tilde_x, W1) + b1)
 z1 = T.nnet.sigmoid(T.dot(y1, W1_prime) + b1_prime)
 cost1 = - T.mean(T.sum(x * T.log(z1) + (1 - x) * T.log(1 - z1), axis=1))
 
-y2 = T.nnet.sigmoid(T.dot(y1, W2) + b2)
+tilde_y1 = theano_rng.binomial(size=y1.shape, n=1, p=1 - corruption_level,
+                              dtype=theano.config.floatX)*y1
+y2 = T.nnet.sigmoid(T.dot(tilde_y1, W2) + b2)
 z2 = T.nnet.sigmoid(T.dot(y2, W2_prime) + b2_prime)
 cost2 = - T.mean(T.sum(y1 * T.log(z2) + (1 - y1) * T.log(1 - z2), axis=1))
 
-y3 = T.nnet.sigmoid(T.dot(y2, W3) + b3)
+tilde_y2 = theano_rng.binomial(size=y2.shape, n=1, p=1 - corruption_level,
+                              dtype=theano.config.floatX)*y2
+y3 = T.nnet.sigmoid(T.dot(tilde_y2, W3) + b3)
 z3 = T.nnet.sigmoid(T.dot(y3, W3_prime) + b3_prime)
 cost3 = - T.mean(T.sum(y2 * T.log(z3) + (1 - y2) * T.log(1 - z3), axis=1))
 
@@ -82,18 +86,22 @@ grads1 = T.grad(cost1, params1)
 updates1 = [(param1, param1 - learning_rate * grad1)
            for param1, grad1 in zip(params1, grads1)]
 train_da1 = theano.function(inputs=[x], outputs = cost1, updates = updates1, allow_input_downcast = True)
+compute_da1 = theano.function(inputs=[x], outputs = [y1, z1], updates = None, allow_input_downcast = True)
+
 #second layer
 params2 = [W2, b2,b2_prime]
 grads2 = T.grad(cost2, params2)
 updates2 = [(param2, param2 - learning_rate * grad2)
            for param2, grad2 in zip(params2, grads2)]
 train_da2 = theano.function(inputs=[y1], outputs = cost2, updates = updates2, allow_input_downcast = True)
+compute_da2 = theano.function(inputs=[y1], outputs = [y2, z2], updates = None, allow_input_downcast = True)
 #third layer
 params3 = [W3, b3,b3_prime]
 grads3 = T.grad(cost3, params3)
 updates3 = [(param3, param3 - learning_rate * grad3)
            for param3, grad3 in zip(params3, grads3)]
 train_da3 = theano.function(inputs=[y2], outputs = cost3, updates = updates3, allow_input_downcast = True)
+compute_da3 = theano.function(inputs=[y2], outputs = [y3, z3], updates = None, allow_input_downcast = True)
 
 
 
@@ -114,7 +122,9 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        c.append(train_da1(trX[start:end]))
+
+        cost = train_da1(trX[start:end])
+        c.append(cost)
     d1.append(np.mean(c, dtype='float64'))
     print(d[epoch])
 
@@ -124,7 +134,9 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        c.append(train_da2(trX[start:end]))
+        yy1, _ = compute_da1(trX[start:end])
+        cost = train_da2(yy1)
+        c.append(cost)
     d2.append(np.mean(c, dtype='float64'))
     print(d[epoch])
 
@@ -134,25 +146,100 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        c.append(train_da3(trX[start:end]))
+        yy1, _ = compute_da1(trX[start:end])
+        yy2, _ = compute_da2(yy1)
+        cost = train_da3(yy2)
+        c.append(cost)
     d3.append(np.mean(c, dtype='float64'))
     print(d[epoch])
 
+#learning curves
+pylab.figure()
+pylab.plot(range(training_epochs), d1)
+pylab.xlabel('iterations')
+pylab.ylabel('cross-entropy')
+pylab.title('first layer')
+pylab.savefig('firstLayer')
 
+pylab.figure()
+pylab.plot(range(training_epochs), d2)
+pylab.xlabel('iterations')
+pylab.ylabel('cross-entropy')
+pylab.title('second layer')
+pylab.savefig('secondLayer')
 
 pylab.figure()
 pylab.plot(range(training_epochs), d3)
 pylab.xlabel('iterations')
 pylab.ylabel('cross-entropy')
-pylab.savefig('figure_2b_1.png')
+pylab.title('third layer')
+pylab.savefig('thirdLayer')
 
+#weights
 w1 = W1.get_value()
 pylab.figure()
 pylab.gray()
 for i in range(100):
     pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(w1[:,i].reshape(28,28))
-pylab.savefig('figure_2b_2.png')
+pylab.title('first layer weights')
+pylab.savefig('firstLayerWeights')
 
+# w2 = W2.get_value()
+# pylab.figure()
+# pylab.gray()
+# for i in range(100):
+#     pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(w2[:,i].reshape(28,28))
+# pylab.title('second layer weights')
+# pylab.savefig('secondLayerWeights')
+#
+# w3 = W3.get_value()
+# pylab.figure()
+# pylab.gray()
+# for i in range(100):
+#     pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(w3[:,i].reshape(28,28))
+# pylab.title('third layer weights')
+# pylab.savefig('thirdLayerWeights')
+
+#reconstructed images
+tilde_teX = []
+for x in teX[:100]:
+    tilde_x = theano_rng.binomial(size=x.shape, n=1, p=1 - corruption_level, dtype=theano.config.floatX)*x
+    tilde_teX.append(tilde_x)
+
+
+yy1, zz1 = compute_da1(tilde_teX)
+yy2, zz2 = compute_da2(yy1)
+yy3, zz3 = compute_da3(yy2)
+
+
+pylab.figure()
+pylab.gray()
+for i in range(100):
+    pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(teX[i,:].reshape(28,28))
+pylab.title('input image first layer')
+pylab.savefig('figure_8.3c_3.png')
+
+
+pylab.figure()
+pylab.gray()
+for i in range(100):
+    pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(yy1[i,:].reshape(28,28))
+pylab.savefig('reconstructed image first layer')
+
+pylab.figure()
+pylab.gray()
+for i in range(100):
+    pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(yy2[i,:].reshape(28,28))
+pylab.savefig('reconstructed image second layer')
+
+pylab.figure()
+pylab.gray()
+for i in range(100):
+    pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(yy3[i,:].reshape(28,28))
+pylab.savefig('reconstructed image third layer')
+
+
+pylab.show()
 
 # print('\ntraining ffn ...')
 # d_ffn, a = [], []
