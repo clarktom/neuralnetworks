@@ -29,7 +29,6 @@ teX, teY = teX[:2000], teY[:2000]
 x = T.fmatrix('x')
 d = T.fmatrix('d')
 
-
 rng = np.random.RandomState(123)
 theano_rng = RandomStreams(rng.randint(2 ** 30))
 
@@ -60,48 +59,54 @@ W3_prime = W3.transpose()
 W_end = init_weights(900, 10)
 b_end = init_bias(10)
 
-print("lmao familicious")
+print("lmao familicious fam")
 
 tilde_x = theano_rng.binomial(size=x.shape, n=1, p=1 - corruption_level,
                               dtype=theano.config.floatX)*x
 y1 = T.nnet.sigmoid(T.dot(tilde_x, W1) + b1)
-z1 = T.nnet.sigmoid(T.dot(y1, W1_prime) + b1_prime)
-cost1 = - T.mean(T.sum(x * T.log(z1) + (1 - x) * T.log(1 - z1), axis=1))
+z1_1 = T.nnet.sigmoid(T.dot(y1, W1_prime) + b1_prime)
+cost1 = - T.mean(T.sum(x * T.log(z1_1) + (1 - x) * T.log(1 - z1_1), axis=1))
 
-tilde_y1 = theano_rng.binomial(size=y1.shape, n=1, p=1 - corruption_level,
-                              dtype=theano.config.floatX)*y1
+yy1 = T.fmatrix('yy1')
+tilde_y1 = theano_rng.binomial(size=yy1.shape, n=1, p=1 - corruption_level,
+                              dtype=theano.config.floatX)*yy1
 y2 = T.nnet.sigmoid(T.dot(tilde_y1, W2) + b2)
-z2 = T.nnet.sigmoid(T.dot(y2, W2_prime) + b2_prime)
-cost2 = - T.mean(T.sum(y1 * T.log(z2) + (1 - y1) * T.log(1 - z2), axis=1))
+z2_2 = T.nnet.sigmoid(T.dot(y2, W2_prime) + b2_prime)
+z1_2 = T.nnet.sigmoid(T.dot(z2_2, W1_prime) + b1_prime)
+cost2 = - T.mean(T.sum(x * T.log(z1_2) + (1 - x) * T.log(1 - z1_2), axis=1))
 
-tilde_y2 = theano_rng.binomial(size=y2.shape, n=1, p=1 - corruption_level,
-                              dtype=theano.config.floatX)*y2
+yy2 = T.fmatrix('yy2')
+tilde_y2 = theano_rng.binomial(size=yy2.shape, n=1, p=1 - corruption_level,
+                              dtype=theano.config.floatX)*yy2
 y3 = T.nnet.sigmoid(T.dot(tilde_y2, W3) + b3)
-z3 = T.nnet.sigmoid(T.dot(y3, W3_prime) + b3_prime)
-cost3 = - T.mean(T.sum(y2 * T.log(z3) + (1 - y2) * T.log(1 - z3), axis=1))
+z3_3 = T.nnet.sigmoid(T.dot(y3, W3_prime) + b3_prime)
+z2_3 = T.nnet.sigmoid(T.dot(z3_3, W2_prime) + b2_prime)
+z1_3 = T.nnet.sigmoid(T.dot(z2_3, W1_prime) + b1_prime)
+cost3 = - T.mean(T.sum(x * T.log(z1_3) + (1 - x) * T.log(1 - z1_3), axis=1))
 
 #first layer
 params1 = [W1, b1, b1_prime]
 grads1 = T.grad(cost1, params1)
 updates1 = [(param1, param1 - learning_rate * grad1)
            for param1, grad1 in zip(params1, grads1)]
-train_da1 = theano.function(inputs=[x], outputs = cost1, updates = updates1, allow_input_downcast = True)
-compute_da1 = theano.function(inputs=[x], outputs = [y1, z1], updates = None, allow_input_downcast = True)
+train_da1 = theano.function(inputs=[x], outputs=cost1, updates=updates1, allow_input_downcast=True)
+test_da1 = theano.function(inputs=[x], outputs=[y1, z1_1], updates=None, allow_input_downcast=True)
 
 #second layer
-params2 = [W2, b2,b2_prime]
+params2 = [W2, b2, b2_prime]
 grads2 = T.grad(cost2, params2)
 updates2 = [(param2, param2 - learning_rate * grad2)
            for param2, grad2 in zip(params2, grads2)]
-train_da2 = theano.function(inputs=[y1], outputs = cost2, updates = updates2, allow_input_downcast = True)
-compute_da2 = theano.function(inputs=[y1], outputs = [y2, z2], updates = None, allow_input_downcast = True)
+train_da2 = theano.function(inputs=[x, yy1], outputs=cost2, updates=updates2, allow_input_downcast=True)
+test_da2 = theano.function(inputs=[yy1], outputs=[y2, z1_2], updates=None, allow_input_downcast=True)
+
 #third layer
-params3 = [W3, b3,b3_prime]
+params3 = [W3, b3, b3_prime]
 grads3 = T.grad(cost3, params3)
 updates3 = [(param3, param3 - learning_rate * grad3)
            for param3, grad3 in zip(params3, grads3)]
-train_da3 = theano.function(inputs=[y2], outputs = cost3, updates = updates3, allow_input_downcast = True)
-compute_da3 = theano.function(inputs=[y2], outputs = [y3, z3], updates = None, allow_input_downcast = True)
+train_da3 = theano.function(inputs=[x, yy2], outputs = cost3, updates = updates3, allow_input_downcast = True)
+test_da3 = theano.function(inputs=[yy2], outputs = [y3, z1_3], updates = None, allow_input_downcast = True)
 
 
 
@@ -122,7 +127,6 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-
         cost = train_da1(trX[start:end])
         c.append(cost)
     d1.append(np.mean(c, dtype='float64'))
@@ -134,8 +138,8 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        yy1, _ = compute_da1(trX[start:end])
-        cost = train_da2(yy1)
+        yy1, _ = test_da1(trX[start:end])
+        cost = train_da2(trX[start:end], yy1)
         c.append(cost)
     d2.append(np.mean(c, dtype='float64'))
     print(d[epoch])
@@ -146,9 +150,9 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        yy1, _ = compute_da1(trX[start:end])
-        yy2, _ = compute_da2(yy1)
-        cost = train_da3(yy2)
+        yy1, _ = test_da1(trX[start:end])
+        yy2, _ = test_da2(yy1)
+        cost = train_da3(trX[start:end], yy2)
         c.append(cost)
     d3.append(np.mean(c, dtype='float64'))
     print(d[epoch])
@@ -201,15 +205,16 @@ pylab.savefig('firstLayerWeights')
 # pylab.savefig('thirdLayerWeights')
 
 #reconstructed images
-tilde_teX = []
-for x in teX[:100]:
+tilde_teX = np.zeros(teX[:100].shape)
+print(tilde_teX.shape)
+for i, x in enumerate(teX[:100]):
     tilde_x = theano_rng.binomial(size=x.shape, n=1, p=1 - corruption_level, dtype=theano.config.floatX)*x
-    tilde_teX += [tilde_x]
-tilde_teX = np.reshape(tilde_teX, teX[:100].shape)
+    tilde_teX[i] = tilde_x # TODO: reformat tilde_x
+# tilde_teX = np.reshape(tilde_teX, teX[:100].shape)
 
-yy1, zz1 = compute_da1(tilde_teX)
-yy2, zz2 = compute_da2(yy1) # TODO: We need to compute zz1 from zz2
-yy3, zz3 = compute_da3(yy2) # TODO: We need to compute zz2 from zz3 and zz1 form zz2
+yy1, zz1 = test_da1(tilde_teX)
+yy2, zz2 = test_da2(yy1)
+yy3, zz3 = test_da3(yy2)
 
 pylab.figure()
 pylab.gray()
