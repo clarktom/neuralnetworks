@@ -27,13 +27,12 @@ trX, trY = trX[:12000], trY[:12000]
 teX, teY = teX[:2000], teY[:2000]
 
 x = T.fmatrix('x')
-d1 = T.fmatrix('d1')
 
 rng = np.random.RandomState(123)
 theano_rng = RandomStreams(rng.randint(2 ** 30))
 
 corruption_level=0.1
-training_epochs = 25
+training_epochs = 30
 learning_rate = 0.1
 batch_size = 128
 
@@ -69,18 +68,18 @@ print("lmao familicious fam")
 
 tilde_x = theano_rng.binomial(size=x.shape, n=1, p=1 - corruption_level,
                               dtype=theano.config.floatX)*x
-y1 = T.nnet.sigmoid(T.dot(x, W1) + b1)
+y1 = T.nnet.sigmoid(T.dot(tilde_x, W1) + b1)
 z1_1 = T.nnet.sigmoid(T.dot(y1, W1_prime) + b1_prime)
 cost1 = - T.mean(T.sum(x * T.log(z1_1) + (1 - x) * T.log(1 - z1_1), axis=1))
 
-yy1 = T.fmatrix('yy1')
-y2 = T.nnet.sigmoid(T.dot(yy1, W2) + b2)
+# yy1 = T.fmatrix('yy1')
+y2 = T.nnet.sigmoid(T.dot(y1, W2) + b2)
 z2_2 = T.nnet.sigmoid(T.dot(y2, W2_prime) + b2_prime)
 z1_2 = T.nnet.sigmoid(T.dot(z2_2, W1_prime) + b1_prime)
 cost2 = - T.mean(T.sum(x * T.log(z1_2) + (1 - x) * T.log(1 - z1_2), axis=1))
 
-yy2 = T.fmatrix('yy2')
-y3 = T.nnet.sigmoid(T.dot(yy2, W3) + b3)
+# yy2 = T.fmatrix('yy2')
+y3 = T.nnet.sigmoid(T.dot(y2, W3) + b3)
 z3_3 = T.nnet.sigmoid(T.dot(y3, W3_prime) + b3_prime)
 z2_3 = T.nnet.sigmoid(T.dot(z3_3, W2_prime) + b2_prime)
 z1_3 = T.nnet.sigmoid(T.dot(z2_3, W1_prime) + b1_prime)
@@ -92,40 +91,27 @@ grads1 = T.grad(cost1, params1)
 updates1 = [(param1, param1 - learning_rate * grad1)
            for param1, grad1 in zip(params1, grads1)]
 train_da1 = theano.function(inputs=[x], outputs=cost1, updates=updates1, allow_input_downcast=True)
-test_da1 = theano.function(inputs=[x], outputs=[y1, z1_1], updates=None, allow_input_downcast=True)
+test_da1 = theano.function(inputs=[x], outputs=[tilde_x, y1, z1_1], updates=None, allow_input_downcast=True)
 
 #second layer
 params2 = [W2, b2, b2_prime]
 grads2 = T.grad(cost2, params2)
 updates2 = [(param2, param2 - learning_rate * grad2)
            for param2, grad2 in zip(params2, grads2)]
-train_da2 = theano.function(inputs=[x, yy1], outputs=cost2, updates=updates2, allow_input_downcast=True)
-test_da2 = theano.function(inputs=[yy1], outputs=[y2, z1_2], updates=None, allow_input_downcast=True)
+train_da2 = theano.function(inputs=[x], outputs=cost2, updates=updates2, allow_input_downcast=True)
+test_da2 = theano.function(inputs=[x], outputs=[y2, z1_2], updates=None, allow_input_downcast=True)
 
 #third layer
 params3 = [W3, b3, b3_prime]
 grads3 = T.grad(cost3, params3)
 updates3 = [(param3, param3 - learning_rate * grad3)
            for param3, grad3 in zip(params3, grads3)]
-train_da3 = theano.function(inputs=[x, yy2], outputs = cost3, updates = updates3, allow_input_downcast = True)
-test_da3 = theano.function(inputs=[yy2], outputs = [y3, z1_3], updates = None, allow_input_downcast = True)
-
-## softmax layer
-# yy3 = T.fmatrix('yy3')
-# p_y_ffn = T.nnet.softmax(T.dot(yy3, W_ffn)+b_ffn)
-# y_ffn = T.argmax(p_y_ffn, axis=1)
-# cost_ffn = T.mean(T.nnet.categorical_crossentropy(p_y_ffn, d1))
-# params_ffn = [W_ffn, b_ffn]
-# grads_ffn = T.grad(cost_ffn, params_ffn)
-# updates_ffn = [(param_ffn, param_ffn - learning_rate * grad_ffn)
-#             for param_ffn, grad_ffn in zip(params_ffn, grads_ffn)]
-# train_ffn = theano.function(inputs=[x, d1], outputs = cost_ffn, updates = updates_ffn, allow_input_downcast = True)
-# test_ffn = theano.function(inputs=[x], outputs = y_ffn, allow_input_downcast=True)
+train_da3 = theano.function(inputs=[x], outputs = cost3, updates = updates3, allow_input_downcast = True)
+test_da3 = theano.function(inputs=[x], outputs = [y3, z1_3], updates = None, allow_input_downcast = True)
 
 print('training dae1 ...')
 d1 = []
 for epoch in range(training_epochs):
-
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
@@ -140,8 +126,7 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        yy1, _ = test_da1(trX[start:end])
-        cost = train_da2(trX[start:end], yy1)
+        cost = train_da2(trX[start:end])
         c.append(cost)
     d2.append(np.mean(c, dtype='float64'))
     print(d2[epoch])
@@ -152,25 +137,10 @@ for epoch in range(training_epochs):
     # go through trainng set
     c = []
     for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-        yy1, _ = test_da1(trX[start:end])
-        yy2, _ = test_da2(yy1)
-        cost = train_da3(trX[start:end], yy2)
+        cost = train_da3(trX[start:end])
         c.append(cost)
     d3.append(np.mean(c, dtype='float64'))
     print(d3[epoch])
-
-# # softmax
-# print('\ntraining ffn ...')
-# testAccuracy = []
-# trainCost = []
-# for epoch in range(training_epochs):
-#         # go through trainng set
-#         for start, end in zip(range(0, len(trX), batch_size), range(batch_size, len(trX), batch_size)):
-#             cost = train_ffn(trX[start:end], trY[start:end])
-#         testAccuracy.append(np.mean(np.argmax(teY, axis=1) == test_ffn(teX)))
-#         trainCost.append(cost/(len(trX) // batch_size))
-#         if epoch%100 == 0:
-#         	print(testAccuracy[epoch])
 
 #learning curves
 pylab.figure()
@@ -193,20 +163,6 @@ pylab.xlabel('iterations')
 pylab.ylabel('cross-entropy')
 pylab.title('third layer')
 pylab.savefig('thirdLayer')
-
-# pylab.figure()
-# pylab.plot(range(training_epochs), testAccuracy)
-# pylab.xlabel('iterations')
-# pylab.ylabel('test accuracy')
-# pylab.title('test accuracy')
-# pylab.savefig('testAcc')
-
-# pylab.figure()
-# pylab.plot(range(training_epochs), trainCost)
-# pylab.xlabel('iterations')
-# pylab.ylabel('training cost')
-# pylab.title('training cost')
-# pylab.savefig('trainC')
 
 # weights
 w1 = W1.get_value()
@@ -231,15 +187,21 @@ for i in range(100):
 pylab.savefig('thirdLayerWeights')
 
 # reconstructed images
+tilde_x, yy1, zz1 = test_da1(teX[:100])
+yy2, zz2 = test_da2(teX[:100])
+yy3, zz3 = test_da3(teX[:100])
+
 pylab.figure('original images')
 pylab.gray()
 for i in range(100):
     pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(teX[i,:].reshape(28,28))
 pylab.savefig('inp_image_original')
 
-yy1, zz1 = test_da1(teX[:100])
-yy2, zz2 = test_da2(yy1)
-yy3, zz3 = test_da3(yy2)
+pylab.figure('noise image input')
+pylab.gray()
+for i in range(100):
+    pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(tilde_x[i,:].reshape(28,28))
+pylab.savefig('inp_image_noise')
 
 pylab.figure('reconstructed image first layer')
 pylab.gray()
