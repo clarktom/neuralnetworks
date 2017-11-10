@@ -227,7 +227,7 @@ pylab.figure()
 pylab.gray()
 for i in range(num_filters1):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(w[i,:,:,:].reshape(9,9))
-#pylab.title('filters learned')
+pylab.title('filters learned')
 pylab.savefig('filtersLearned')
 
 ind = np.random.randint(low=0, high=2000)
@@ -236,35 +236,35 @@ convolved, pooled, convolved2, pooled2 = test(teX[ind:ind+1,:])
 pylab.figure()
 pylab.gray()
 pylab.axis('off'); pylab.imshow(teX[ind,:].reshape(28,28))
-#pylab.title('input image')
+pylab.title('input image')
 pylab.savefig('inputImage')
 
 pylab.figure()
 pylab.gray()
 for i in range(num_filters1):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(convolved[0,i,:].reshape(20,20))
-#pylab.title('convolved feature maps')
+pylab.title('first convolved feature maps')
 pylab.savefig('1stConv_layer')
 
 pylab.figure()
 pylab.gray()
 for i in range(5):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled[0,i,:].reshape(10,10))
-#pylab.title('pooled feature maps')
+pylab.title('first pooled feature maps')
 pylab.savefig('1stPool_layer')
 
 pylab.figure()
 pylab.gray()
 for i in range(num_filters2):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(convolved2[0,i,:].reshape(6,6))
-#pylab.title('convolved feature maps')
 
+pylab.title('second convolved feature maps')
 pylab.savefig('2stConv_layer')
 pylab.figure()
 pylab.gray()
 for i in range(5):
     pylab.subplot(5, 5, i+1); pylab.axis('off'); pylab.imshow(pooled2[0,i,:].reshape(3,3))
-#pylab.title('pooled feature maps')
+pylab.title('second pooled feature maps')
 pylab.savefig('2stPool_layer_SGD')
 
 pylab.show()
