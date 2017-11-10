@@ -11,7 +11,7 @@ from theano.tensor.signal import pool
 
 np.random.seed(10)
 batch_size = 128
-noIters = 25
+noIters = 100
 learningrate = 0.05
 decayparameter = 1e-4
 momentum = 0.1
