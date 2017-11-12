@@ -109,7 +109,7 @@ test_da3 = theano.function(inputs=[x], outputs=[y3, z1_3], updates=None, allow_i
 p_y_ffn = T.nnet.softmax(T.dot(y3, W_ffn) + b_ffn)
 y_ffn = T.argmax(p_y_ffn, axis=1)
 cost_ffn = T.mean(T.nnet.categorical_crossentropy(p_y_ffn, d))
-params_ffn = [W_ffn, b_ffn] # W1, b1, W2, b2, W3, b3, W_ffn, b_ffn
+params_ffn = [W1, b1, W2, b2, W3, b3, W_ffn, b_ffn]
 grads_ffn = T.grad(cost_ffn, params_ffn)
 updates_ffn = [(param_ffn, param_ffn - learning_rate * grad_ffn)
             for param_ffn, grad_ffn in zip(params_ffn, grads_ffn)]

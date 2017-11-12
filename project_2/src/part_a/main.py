@@ -110,7 +110,6 @@ def RMSprop(cost, params, lr=0.001, decay=0.0001, rho=0.9, epsilon=1e-6):
         updates.append((p, p - lr * (g+ decay*p)))
     return updates
 
-
 def shuffle_data (samples, labels):
     idx = np.arange(samples.shape[0])
     np.random.shuffle(idx)
@@ -124,7 +123,6 @@ teX = teX.reshape(-1, 1, 28, 28)
 
 trX, trY = trX[:12000], trY[:12000]
 teX, teY = teX[:2000], teY[:2000]
-
 
 X = T.tensor4('X')
 Y = T.matrix('Y')

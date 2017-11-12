@@ -144,25 +144,14 @@ for epoch in range(training_epochs):
 
 #learning curves
 pylab.figure()
-pylab.plot(range(training_epochs), d1)
+pylab.plot(range(training_epochs), d1, label="first layer")
+pylab.plot(range(training_epochs), d2, label="second layer")
+pylab.plot(range(training_epochs), d3, label="third layer")
 pylab.xlabel('iterations')
 pylab.ylabel('cross-entropy')
-pylab.title('first layer')
-pylab.savefig('firstLayer')
-
-pylab.figure()
-pylab.plot(range(training_epochs), d2)
-pylab.xlabel('iterations')
-pylab.ylabel('cross-entropy')
-pylab.title('second layer')
-pylab.savefig('secondLayer')
-
-pylab.figure()
-pylab.plot(range(training_epochs), d3)
-pylab.xlabel('iterations')
-pylab.ylabel('cross-entropy')
-pylab.title('third layer')
-pylab.savefig('thirdLayer')
+pylab.legend(loc="upper right")
+pylab.title('Learning curves')
+pylab.savefig('learning_curves')
 
 # weights
 w1 = W1.get_value()

@@ -124,7 +124,7 @@ test_da3 = theano.function(inputs=[x], outputs=[y3, z1_3], updates=None, allow_i
 p_y_ffn = T.nnet.softmax(T.dot(y3, W_ffn) + b_ffn)
 y_ffn = T.argmax(p_y_ffn, axis=1)
 cost_ffn = T.mean(T.nnet.categorical_crossentropy(p_y_ffn, d))
-params_ffn = [W_ffn, b_ffn]
+params_ffn = [W1, b1, W2, b2, W3, b3, W_ffn, b_ffn]
 updates_ffn = sgd_momentum(cost_ffn, params_ffn)
 train_ffn = theano.function(inputs=[x, d], outputs=cost_ffn, updates=updates_ffn, allow_input_downcast=True)
 test_ffn = theano.function(inputs=[x], outputs=y_ffn, allow_input_downcast=True)
